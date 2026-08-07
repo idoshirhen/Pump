@@ -503,6 +503,79 @@
       .daily b {
         font-size: 30px;
       }
+      .nutrition-table {
+        margin-top: 12px;
+        border-top: 1px solid #ffffff20;
+      }
+      .nutrition-row {
+        display: grid;
+        grid-template-columns: 1.15fr repeat(3, 0.8fr);
+        gap: 5px;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px solid #ffffff14;
+        font-size: 11px;
+      }
+      .nutrition-row:last-child {
+        border-bottom: 0;
+      }
+      .nutrition-row span,
+      .nutrition-row b {
+        text-align: center;
+      }
+      .nutrition-row b {
+        text-align: right;
+        font-size: 12px;
+      }
+      .nutrition-row small {
+        color: #aaa;
+        font-size: 9px;
+      }
+      .nutrition-labels {
+        color: #999;
+        padding-top: 7px;
+        font-size: 9px;
+      }
+      .nutrition-row .remaining {
+        color: var(--green);
+        font-weight: 800;
+      }
+      .workout-card {
+        margin-top: 18px;
+        padding: 17px;
+        border: 1px solid #24c66b4d;
+        border-radius: 20px;
+        background: linear-gradient(145deg, #17251b, #101511);
+      }
+      .workout-card > small {
+        color: #a0d998;
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .workout-card h2 {
+        margin: 5px 0 4px;
+        font-size: 20px;
+      }
+      .workout-card p {
+        margin: 0;
+        color: #bbb;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .workout-parts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 7px;
+        margin-top: 14px;
+      }
+      .workout-parts span {
+        padding: 9px 5px;
+        border-radius: 11px;
+        background: #ffffff0b;
+        color: #cdeecf;
+        text-align: center;
+        font-size: 10px;
+      }
       .ring {
         width: 59px;
         height: 59px;
@@ -1054,6 +1127,20 @@
       }
       .metrics b {
         font-size: 13px;
+      }
+      .nutrition-table {
+        margin-top: 8px;
+      }
+      .nutrition-row {
+        padding: 6px 0;
+        font-size: 10px;
+      }
+      .nutrition-row b {
+        font-size: 10px;
+      }
+      .nutrition-row small,
+      .nutrition-labels {
+        font-size: 8px;
       }
       .water {
         margin-top: 8px;
@@ -1830,7 +1917,71 @@
         return {
           cal: Math.max(1200, Math.round((b * m - 400) / 50) * 50),
           pro: Math.round(form.startWeight * 1.5),
+          carbs: 0,
+          fat: 0,
         };
+      }
+      function nutritionTarget() {
+        const t = target();
+        t.fat = Math.max(35, Math.round((t.cal * 0.28) / 5) * 5);
+        t.carbs = Math.max(
+          0,
+          Math.round((t.cal - t.pro * 4 - t.fat * 9) / 20) * 5,
+        );
+        return t;
+      }
+      function todayContent(p, t, totals) {
+        const values = [
+          ["קלוריות", "calories", t.cal, "קל׳"],
+          ["חלבון", "protein", t.pro, "ג׳"],
+          ["פחמימות", "carbs", t.carbs, "ג׳"],
+          ["שומנים", "fat", t.fat, "ג׳"],
+        ];
+        const rows = values
+          .map(([label, key, goal, unit]) => {
+            const eaten = Math.round(totals[key] || 0);
+            const remaining = Math.max(0, goal - eaten);
+            return (
+              '<div class="nutrition-row"><b>' +
+              label +
+              '</b><span>' +
+              goal +
+              ' <small>' +
+              unit +
+              '</small></span><span>' +
+              eaten +
+              ' <small>' +
+              unit +
+              '</small></span><span class="remaining">' +
+              remaining +
+              ' <small>' +
+              unit +
+              '</small></span></div>'
+            );
+          })
+          .join("");
+        return (
+          '<p class="day">' +
+          new Intl.DateTimeFormat("he-IL", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          }).format(new Date()) +
+          '</p><h1>בוקר טוב, ' +
+          esc(p.name) +
+          ' <strong>✦</strong></h1><p class="subtitle">הערכים שלך להיום — יעד, מה שכבר נאכל ומה שנשאר.</p><section class="daily"><div class="daily-head"><div><small>יעד קלורי יומי</small><b>' +
+          t.cal +
+          ' <small style="display:inline">קלוריות</small></b></div><div class="ring"><strong>' +
+          totals.calories +
+          '</strong><small>נאכלו</small></div></div><div class="nutrition-table"><div class="nutrition-row nutrition-labels"><span>ערך</span><span>יעד</span><span>נאכל</span><span>נותר</span></div>' +
+          rows +
+          "</div></section>"
+        );
+      }
+      function fitnessContent() {
+        return (
+          '<p class="kicker">כושר</p><h1>ממשיכים<br><strong>להתחזק.</strong></h1><p class="subtitle">כאן יופיעו האימונים האישיים שלך וההתקדמות בהם.</p><section class="workout-card"><small>אימון היום</small><h2>תוכנית הכושר שלך</h2><p>הגדירו את מטרת האימון והציוד שלכם כדי לבנות כאן אימון מותאם.</p><div class="workout-parts"><span>חימום<br>5 דק׳</span><span>אימון<br>20 דק׳</span><span>שחרור<br>5 דק׳</span></div></section>'
+        );
       }
       function toast(x) {
         const e = document.createElement("div");
@@ -2048,7 +2199,7 @@
         let p = me.profile || form,
           w = store.get("weights") || [],
           last = w.at(-1)?.weight || p.startWeight,
-          t = target(),
+          t = nutritionTarget(),
           foodTotals = mealTotals(),
           lost = Math.max(0, p.startWeight - last),
           left = Math.max(0, last - p.targetWeight);
@@ -2057,6 +2208,7 @@
           [
             ["home", "⌂", "היום"],
             ["food", "◒", "תזונה"],
+            ["fitness", "⌁", "כושר"],
             ["progress", "↗", "התקדמות"],
             ["camera", "◉", "צילום אוכל"],
           ]
@@ -2075,54 +2227,11 @@
             .join("") +
           "</nav>";
         let content = "";
-        if (tab === "home")
-          content =
-            '<p class="day">' +
-            new Intl.DateTimeFormat("he-IL", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            }).format(new Date()) +
-            "</p><h1>בוקר טוב, " +
-            esc(p.name) +
-            ' <strong>✦</strong></h1><p class="subtitle">ממשיכים מהנקודה שבה עצרנו. בלי דרמה, פשוט עקביות.</p><section class="daily"><div class="daily-head"><div><small>המסגרת שלך להיום</small><b>' +
-            t.cal +
-            ' <small style="display:inline">קלוריות</small></b></div><div class="ring"><strong>' + foodTotals.calories + '</strong><small>נאכלו</small></div></div><div class="divider"></div><div class="metrics"><span><b>' + foodTotals.protein + '</b> / ' +
-            t.pro +
-            '<small>חלבון</small></span><span><b id="waterN">' +
-            water +
-            '</b> / 8<small>כוסות מים</small></span></div><div class="water"><button id="less">−</button>' +
-            Array.from(
-              { length: 8 },
-              (_, i) => '<i class="' + (i < water ? "full" : "") + '"></i>',
-            ).join("") +
-            '<button id="more">+</button></div></section><section class="section-title"><span><small>להיום</small><h2>שלושה צעדים קטנים</h2></span><b id="count">' +
-            tasks.length +
-            '/3</b></section><div class="tasks">' +
-            [
-              ["breakfast", "☼", "ארוחה ראשונה", "מתחילים עם חלבון"],
-              ["walk", "⌁", "תנועה", "20 דקות זה בדיוק מספיק"],
-              ["check", "✦", "צ׳ק־אין ערב", "דקה להבין את היום"],
-            ]
-              .map(
-                (x) =>
-                  '<button class="task ' +
-                  (tasks.includes(x[0]) ? "done" : "") +
-                  '" data-task="' +
-                  x[0] +
-                  '"><span class="task-icon">' +
-                  (tasks.includes(x[0]) ? "✓" : x[1]) +
-                  "</span><span><b>" +
-                  x[2] +
-                  "</b><small>" +
-                  x[3] +
-                  "</small></span><em>‹</em></button>",
-              )
-              .join("") +
-            '</div><section class="tip"><span>✦</span><p><b>המאמן שלך אומר:</b> יום פחות מדויק לא מקלקל תהליך. הארוחה הבאה היא תמיד הזדמנות לחזור למסלול.</p></section>';
+        if (tab === "home") content = todayContent(p, t, foodTotals);
         if (tab === "food")
           content =
             '<p class="kicker">תזונה פשוטה</p><h1>לא דיאטה.<br><strong>מסגרת לחיים.</strong></h1><p class="subtitle">הבסיס שלך לכל ארוחה: חלבון, פחמימה וירקות. לא צריך לספור כל דבר כדי להתחיל טוב.</p><section class="plate-card"><div class="plate"></div><div><h2>כך בונים צלחת</h2><p>חצי ירקות, רבע חלבון, רבע פחמימה. זו נקודת התחלה, לא עונש.</p></div></section><article class="meal"><b>בוקר</b><h3>חלבון לפתיחה</h3><p>ביצים, יוגורט, גבינה, כריך עם טונה או מה שמתאים לך.</p></article><article class="meal"><b>צהריים וערב</b><h3>צלחת מאוזנת</h3><p>עוף, דג, טופו או קטניות, לצד תוספת וירקות.</p></article><article class="meal"><b>גם לזה יש מקום</b><h3>מתוק מתוכנן</h3><p>לא “נשברת” — בוחרת מראש ונהנית בלי רגשות אשם.</p></article>';
+        if (tab === "fitness") content = fitnessContent();
         if (tab === "progress")
           content =
             '<p class="kicker">התקדמות אמיתית</p><h1>מסתכלים על<br><strong>המגמה, לא על יום.</strong></h1><section class="stats"><div><small>משקל נוכחי</small><b>' +
