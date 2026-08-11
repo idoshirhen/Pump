@@ -30,8 +30,15 @@
     </style>
     <script>
       (() => {
-        const cleanNutritionUi = () => {
+        const refreshUi = () => {
           document.querySelectorAll('.plate-card.compact, .top-actions .ai-orb, .meal-skip').forEach((element) => element.remove());
+
+          document.querySelectorAll('.welcome .app-mark, .auth-modal .app-mark').forEach((logo) => {
+            if (!logo.src.endsWith('/Pump/pump-logo-black.png')) {
+              logo.src = '/Pump/pump-logo-black.png';
+            }
+          });
+
           document.querySelectorAll('.toast').forEach((toast) => {
             if (toast.textContent?.trim() === 'החלופה נשמרה להיום.') {
               toast.textContent = 'החלפנו לאפשרות אחרת.';
@@ -39,8 +46,8 @@
           });
         };
 
-        new MutationObserver(cleanNutritionUi).observe(document.documentElement, { childList: true, subtree: true });
-        cleanNutritionUi();
+        new MutationObserver(refreshUi).observe(document.documentElement, { childList: true, subtree: true });
+        refreshUi();
       })();
     </script>
   </body>
