@@ -125,3 +125,39 @@ npm warn Unknown env config "http-proxy". This will stop working in the next maj
   margin: 10px 2px 0;
   text-align: center;
 }
+
+/* Saved food is a completed state, so the whole section reads green. */
+.logged-food .section-title small,
+.logged-food .section-title h2,
+.logged-food article b,
+.logged-food article small {
+  color: #7ee4a5;
+}
+
+.logged-food article {
+  background: linear-gradient(135deg, #17231a, #151d17);
+  border-color: #24c66b80;
+}
+
+.logged-food article::before {
+  color: #24c66b;
+  content: "✓";
+  flex: none;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.logged-food button {
+  background: #142719;
+  color: #7ee4a5;
+}
+
+.number-picker.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.weekend-eating-note {
+  color: #94949a;
+  font-size: 11px;
+  margin: -3px 0 8px;
+}
