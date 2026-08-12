@@ -1,3 +1,4 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 .metrics:has(> span:nth-child(2):last-child) {
   justify-content: space-around;
 }
@@ -37,12 +38,13 @@
 }
 
 .rest-timer.is-running .rest-timer-status {
-  color: #ff6b00;
-  filter: drop-shadow(0 0 6px #ff6b00);
+  color: #24c66b;
+  filter: drop-shadow(0 0 6px #24c66b);
 }
 
-.rest-timer.is-finished {
+.rest-timer.is-running {
   border-color: #24c66b;
+  box-shadow: 0 0 0 1px #24c66b33, 0 14px 30px #0004;
 }
 
 .rest-timer.is-finished .rest-timer-status,
