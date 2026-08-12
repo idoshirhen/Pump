@@ -1,0 +1,125 @@
+.metrics:has(> span:nth-child(2):last-child) {
+  justify-content: space-around;
+}
+
+.rest-timer {
+  background: linear-gradient(145deg, #24180f, #171719);
+  border: 1px solid #ff6b005c;
+  border-radius: 20px;
+  margin: 22px 0 13px;
+  padding: 15px;
+  box-shadow: 0 14px 30px #0004;
+}
+
+.rest-timer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rest-timer-head small {
+  color: #ff9c57;
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.rest-timer-head h2 {
+  color: #fff;
+  font-size: 17px;
+  margin: 2px 0 0;
+}
+
+.rest-timer-status {
+  color: #77777d;
+  font-size: 15px;
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+
+.rest-timer.is-running .rest-timer-status {
+  color: #ff6b00;
+  filter: drop-shadow(0 0 6px #ff6b00);
+}
+
+.rest-timer.is-finished {
+  border-color: #24c66b;
+}
+
+.rest-timer.is-finished .rest-timer-status,
+.rest-timer.is-finished .rest-timer-display {
+  color: #24c66b;
+}
+
+.rest-timer-display {
+  color: #fff;
+  direction: ltr;
+  font-size: 48px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+  margin: 17px 0 15px;
+  text-align: center;
+}
+
+.rest-timer-presets {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.rest-timer-presets button {
+  background: #242426;
+  border: 1px solid #ffffff1d;
+  border-radius: 10px;
+  color: #b9b9be;
+  min-height: 38px;
+  padding: 5px 2px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.rest-timer-presets button.active {
+  background: #ff6b00;
+  border-color: #ff6b00;
+  color: #111;
+}
+
+.rest-timer-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 0.8fr 1.4fr;
+  margin-top: 11px;
+}
+
+.rest-timer-actions button {
+  border-radius: 12px;
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.rest-timer-reset {
+  background: #242426;
+  border: 1px solid #ffffff24;
+  color: #dddde1;
+}
+
+.rest-timer-toggle {
+  background: #ff6b00;
+  border: 1px solid #ff6b00;
+  color: #111;
+}
+
+.rest-timer.is-running .rest-timer-toggle {
+  background: #2b1b11;
+  color: #ff9c57;
+}
+
+.rest-timer > p {
+  color: #94949a;
+  font-size: 9px;
+  line-height: 1.45;
+  margin: 10px 2px 0;
+  text-align: center;
+}
