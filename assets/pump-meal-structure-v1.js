@@ -153,6 +153,7 @@
   const api = async (path, token, init = {}) => {
     const response = await fetch(`${SB}/rest/v1/${path}`, { ...init, headers: { apikey: SB_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers || {}) } });
     if (!response.ok) throw new Error('לא הצלחנו לשמור. נסו שוב.');
+    return response.status === 204 ? null : response.json();
   };
   const coreCards = () => [...document.querySelectorAll('.menu-list > article:not(.pump-snack-meal)')];
   const distribute = (plan) => {
@@ -175,6 +176,21 @@
     const s = getSession(); if (!s) return;
     await Promise.all(coreCards().map((card, i) => api(`food_entries?user_id=eq.${s.user.id}&date=eq.${date()}&menu_key=eq.menu-${i}`, s.access_token, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ calories: Number(card.dataset.pumpCalories), protein: Number(card.dataset.pumpProtein) }) })));
   };
+  const syncSnackCard = async (index, card) => {
+    const s = getSession(); if (!s) return;
+    const key = `pump-snack-${index}`, rows = await api(`food_entries?select=id,name,calories,protein&user_id=eq.${s.user.id}&date=eq.${date()}&menu_key=eq.${key}`, s.access_token);
+    const saved = rows?.[0]; if (!saved) return;
+    card.classList.add('meal-done');
+    card.querySelector('h3').textContent = saved.name;
+    card.querySelector('small').textContent = `כ־${saved.protein} גרם חלבון · כ־${saved.calories} קל׳`;
+    card.querySelector('.meal-swap').remove();
+    const button = card.querySelector('.meal-toggle');
+    button.textContent = '✓ נאכל היום — ביטול';
+    button.onclick = async () => {
+      button.disabled = true;
+      try { await api(`food_entries?id=eq.${saved.id}`, s.access_token, { method: 'DELETE' }); await api(`meal_actions?user_id=eq.${s.user.id}&date=eq.${date()}&meal_key=eq.${key}`, s.access_token, { method: 'DELETE' }); window.location.reload(); } catch (_) { button.disabled = false; button.textContent = 'שגיאה — נסו שוב'; }
+    };
+  };
   const addSnackCards = () => {
     try {
       const list = document.querySelector('.menu-list'); if (!list || list.querySelector('.pump-snack-meal')) return;
@@ -196,6 +212,7 @@
           } catch (_) { button.disabled = false; button.textContent = 'שגיאה — נסו שוב'; }
         };
         list.append(card);
+        syncSnackCard(index, card).catch(() => {});
       });
     } catch (_) { /* The screen stays usable even if this optional enhancement fails. */ }
   };
