@@ -1,9 +1,0 @@
-{
-  "name": "pump-source",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test:nutrition": "node --test test/nutrition.test.mjs",
-    "check:source": "node --check src/main.js && node --check src/app/pumpApp.js && node --check src/app/nutritionRuntime.js"
-  }
-}
