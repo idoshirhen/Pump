@@ -135,15 +135,63 @@
     return choices.slice(0, count);
   };
 
+  const snackSession = () => {
+    try {
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (!key || !key.includes('auth-token')) continue;
+        const value = JSON.parse(localStorage.getItem(key) || '{}');
+        const session = value.currentSession || value.session || value;
+        if (session?.access_token && session?.user?.id) return session;
+      }
+    } catch (_) { /* A snack-card error must never affect the app screen. */ }
+    return null;
+  };
+
+  const snackDate = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  const saveSnack = async (index, snack, button) => {
+    const session = snackSession();
+    if (!session) throw new Error('יש להתחבר מחדש לפני סימון הארוחה.');
+    const day = snackDate();
+    const key = `snack-${index}`;
+    const headers = { apikey: 'sb_publishable_DlOsq6M0Wrwl_9lIH1qvQQ_bKJxwgNg', Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
+    button.disabled = true;
+    button.textContent = 'שומרים…';
+    const remove = await fetch(`https://aebysqjymsjepvslidjl.supabase.co/rest/v1/food_entries?user_id=eq.${session.user.id}&date=eq.${day}&menu_key=eq.${key}`, { method: 'DELETE', headers });
+    if (!remove.ok) throw new Error('לא הצלחנו לשמור את ארוחת הביניים.');
+    const add = await fetch('https://aebysqjymsjepvslidjl.supabase.co/rest/v1/food_entries', {
+      method: 'POST',
+      headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({ user_id: session.user.id, date: day, menu_key: key, name: snack.title, calories: Number(snack.calories.replace(/[^0-9]/g, '')), protein: Number(snack.protein.replace(/[^0-9]/g, '')) })
+    });
+    if (!add.ok) throw new Error('לא הצלחנו לשמור את ארוחת הביניים.');
+    window.location.reload();
+  };
+
   const improveNutrition = () => {
     const menuList = document.querySelector('.menu-list');
     if (!menuList || document.querySelector('.pump-snack-meal')) return;
     const plan = inferPlan();
     const mainMeals = plan.pattern === 'two' ? 2 : 3;
-    snackCards(plan.snacks).forEach((snack, index) => {
+    snackCards(plan.snacks).forEach((initialSnack, index) => {
+      let snack = initialSnack;
       const card = document.createElement('article');
       card.className = 'pump-snack-meal';
-      card.innerHTML = `<div class="menu-meta"><b>ארוחת ביניים ${index + 1}</b><span>ביניים</span></div><p class="meal-label">${index === 0 ? 'שומרים על שובע בין הארוחות' : 'סוגרים את הפער עד לארוחה הבאה'}</p><h3>${snack.title}</h3><p>${snack.detail}</p><small>${snack.protein} · ${snack.calories}</small>`;
+      card.innerHTML = `<div class="menu-meta"><b>ארוחת ביניים ${index + 1}</b><span>חלופה 1 מתוך 2</span></div><p class="meal-label">${index === 0 ? 'שומרים על שובע בין הארוחות' : 'סוגרים את הפער עד לארוחה הבאה'}</p><h3>${snack.title}</h3><p>${snack.detail}</p><small>${snack.protein} · ${snack.calories}</small><div class="meal-buttons"><button class="meal-swap" type="button">↻ החלפה</button><button class="meal-toggle" type="button">✓ אכלתי</button></div>`;
+      card.querySelector('.meal-swap').addEventListener('click', () => {
+        snack = snackCards(2).find((item) => item.title !== snack.title) || snack;
+        card.querySelector('h3').textContent = snack.title;
+        card.querySelector('h3').nextElementSibling.textContent = snack.detail;
+        card.querySelector('small').textContent = `${snack.protein} · ${snack.calories}`;
+      });
+      card.querySelector('.meal-toggle').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        try { await saveSnack(index, snack, button); } catch (error) { button.disabled = false; button.textContent = error.message || 'נסו שוב'; }
+      });
       menuList.append(card);
     });
     const count = document.querySelector('.menu-title b');
@@ -196,7 +244,7 @@
     .pump-meal-question{margin:13px 0}.pump-meal-question p{margin:0 0 7px;font-size:13px;font-weight:800}.pump-meal-choices{display:flex;flex-wrap:wrap;gap:7px}
     .pump-meal-choices button{border:1px solid #373737;border-radius:999px;background:#222;color:#eaeaea;padding:8px 10px;font:inherit;font-size:12px}.pump-meal-choices button.active{border-color:#ff6b00;background:#ff6b001a;color:#ff9c56}
     .pump-meal-result{display:grid;gap:4px;margin-top:15px;padding:12px;border-radius:13px;background:#18251c;border:1px solid #24c66b66}.pump-meal-result small{color:#7ee4a5}.pump-meal-result b{color:#fff;font-size:16px}.pump-meal-result span{color:#b7c8bb;font-size:12px;line-height:1.4}
-    .pump-meal-source-hidden{display:none!important}.pump-snack-meal{border:1px solid #24c66b66!important;background:linear-gradient(135deg,#16261a,#111)!important}.pump-snack-meal .menu-meta b{color:#7ee4a5!important}.pump-snack-meal .menu-meta span{color:#7ee4a5!important}.pump-snack-meal h3{font-size:16px}
+    .pump-meal-source-hidden{display:none!important}.pump-snack-meal{border:1px solid #303030!important;background:#181818!important}.pump-snack-meal .menu-meta b{color:#fff!important}.pump-snack-meal .menu-meta span{color:#aaa!important}.pump-snack-meal h3{font-size:16px}
     .pump-daily-progress{display:grid;gap:3px;min-width:142px;padding:12px 13px;border:1px solid #ff6b005c;border-radius:14px;background:linear-gradient(135deg,#21160e,#15110d);text-align:right}.pump-daily-progress small{color:#ffad75;font-size:11px}.pump-daily-progress b{color:#fff;font-size:19px}.pump-daily-progress b em{font-style:normal;font-size:11px;color:#e7c8b4}.pump-daily-progress span{color:#a9a09a;font-size:10px;line-height:1.35}
   `;
   document.head.append(style);
