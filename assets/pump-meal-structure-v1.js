@@ -64,8 +64,12 @@
     const sourceList = sourceLabel.nextElementSibling;
     if (!sourceList || !sourceList.classList.contains('activity-list')) return;
 
+    /* React can redraw this step after our script has mounted. Mark both original
+       controls permanently instead of relying only on the one-time hidden flag. */
     sourceLabel.hidden = true;
     sourceList.hidden = true;
+    sourceLabel.classList.add('pump-meal-source-hidden');
+    sourceList.classList.add('pump-meal-source-hidden');
     const saved = read();
     const answers = saved.answers || {};
     const panel = document.createElement('section');
@@ -123,19 +127,66 @@
     list.append(item);
   };
 
+  const snackCards = (count) => {
+    const choices = [
+      { title: 'פרי וסקיר / יוגורט PRO', detail: 'פרי אחד עם סקיר או יוגורט חלבון. אפשר להחליף במעדן חלבון.', calories: 'כ־170 קל׳', protein: 'כ־18 גרם חלבון' },
+      { title: 'כריך קטן עם חלבון', detail: '2 פרוסות לחם מלא עם קוטג׳, טונה או ביצה. אפשר להחליף בשייק חלבון ובננה.', calories: 'כ־250 קל׳', protein: 'כ־20 גרם חלבון' }
+    ];
+    return choices.slice(0, count);
+  };
+
   const improveNutrition = () => {
     const menuList = document.querySelector('.menu-list');
-    if (!menuList || document.querySelector('.pump-snack-plan')) return;
+    if (!menuList || document.querySelector('.pump-snack-meal')) return;
     const plan = inferPlan();
-    const snack = document.createElement('section');
-    snack.className = 'snack-card pump-snack-plan';
-    const examples = plan.snacks === 2
-      ? 'ביניים 1: פרי עם יוגורט/סקיר או חופן אגוזים. ביניים 2: כריך קטן עם חלבון, מעדן חלבון או שייק.'
-      : 'פרי עם יוגורט/סקיר, חופן אגוזים, כריך קטן עם חלבון או שייק.';
-    snack.innerHTML = `<span>✦</span><div><b>${plan.snacks} ארוחות ביניים היום</b><p>${examples}</p></div>`;
-    menuList.after(snack);
+    const mainMeals = plan.pattern === 'two' ? 2 : 3;
+    snackCards(plan.snacks).forEach((snack, index) => {
+      const card = document.createElement('article');
+      card.className = 'pump-snack-meal';
+      card.innerHTML = `<div class="menu-meta"><b>ארוחת ביניים ${index + 1}</b><span>ביניים</span></div><p class="meal-label">${index === 0 ? 'שומרים על שובע בין הארוחות' : 'סוגרים את הפער עד לארוחה הבאה'}</p><h3>${snack.title}</h3><p>${snack.detail}</p><small>${snack.protein} · ${snack.calories}</small>`;
+      menuList.append(card);
+    });
     const count = document.querySelector('.menu-title b');
     if (count) count.textContent = plan.meals;
+    const titleCount = document.querySelector('.menu-title small');
+    if (titleCount) titleCount.textContent = `${mainMeals} ארוחות עיקריות + ${plan.snacks} ארוחות ביניים`;
+  };
+
+  const exerciseNames = {
+    'רגליים': { gym: 'רגליים · לחיצת רגליים במכונה', home: 'רגליים · סקוואט לכיסא' },
+    'חזה וידיים': { gym: 'חזה וידיים · לחיצת חזה במכונה', home: 'חזה וידיים · שכיבות סמיכה בשיפוע' },
+    'גב': { gym: 'גב · פולי עליון או חתירה במכונה', home: 'גב · חתירה עם משקולת או גומייה' },
+    'רגליים וישבן': { gym: 'רגליים וישבן · דדליפט רומני / כפיפת רגליים', home: 'רגליים וישבן · הרמת אגן בשכיבה' },
+    'כתפיים': { gym: 'כתפיים · לחיצת כתפיים במכונה', home: 'כתפיים · לחיצת כתפיים עם משקולות' },
+    'בטן': { gym: 'בטן · פלאנק או דד־באג', home: 'בטן · פלאנק או דד־באג' }
+  };
+
+  const improveTraining = () => {
+    document.querySelectorAll('.exercise-list article').forEach((card) => {
+      const title = card.querySelector('b');
+      if (!title || title.dataset.pumpExercise) return;
+      const original = title.textContent.trim();
+      const map = exerciseNames[original];
+      if (!map) return;
+      const isGym = card.textContent.includes('מכונה') || card.textContent.includes('פולי') || card.textContent.includes('ידיות');
+      title.textContent = isGym ? map.gym : map.home;
+      title.dataset.pumpExercise = 'true';
+    });
+  };
+
+  const improveToday = () => {
+    const daily = document.querySelector('.daily-card');
+    if (!daily || daily.querySelector('.pump-daily-progress')) return;
+    const ring = daily.querySelector('.goal-ring');
+    if (!ring) return;
+    const calories = ring.querySelector('strong')?.textContent || '0';
+    const label = ring.querySelector('small')?.textContent || 'נאכלו';
+    const summary = document.createElement('div');
+    summary.className = 'pump-daily-progress';
+    summary.innerHTML = `<small>המעקב שלך היום</small><b>${calories} <em>קל׳ ${label}</em></b><span>הנתונים מתעדכנים בכל ארוחה שתסמן/י.</span>`;
+    ring.replaceWith(summary);
+    daily.querySelector('.water')?.remove();
+    daily.querySelector('.metrics span:last-child')?.remove();
   };
 
   const style = document.createElement('style');
@@ -145,6 +196,8 @@
     .pump-meal-question{margin:13px 0}.pump-meal-question p{margin:0 0 7px;font-size:13px;font-weight:800}.pump-meal-choices{display:flex;flex-wrap:wrap;gap:7px}
     .pump-meal-choices button{border:1px solid #373737;border-radius:999px;background:#222;color:#eaeaea;padding:8px 10px;font:inherit;font-size:12px}.pump-meal-choices button.active{border-color:#ff6b00;background:#ff6b001a;color:#ff9c56}
     .pump-meal-result{display:grid;gap:4px;margin-top:15px;padding:12px;border-radius:13px;background:#18251c;border:1px solid #24c66b66}.pump-meal-result small{color:#7ee4a5}.pump-meal-result b{color:#fff;font-size:16px}.pump-meal-result span{color:#b7c8bb;font-size:12px;line-height:1.4}
+    .pump-meal-source-hidden{display:none!important}.pump-snack-meal{border:1px solid #24c66b66!important;background:linear-gradient(135deg,#16261a,#111)!important}.pump-snack-meal .menu-meta b{color:#7ee4a5!important}.pump-snack-meal .menu-meta span{color:#7ee4a5!important}.pump-snack-meal h3{font-size:16px}
+    .pump-daily-progress{display:grid;gap:3px;min-width:142px;padding:12px 13px;border:1px solid #ff6b005c;border-radius:14px;background:linear-gradient(135deg,#21160e,#15110d);text-align:right}.pump-daily-progress small{color:#ffad75;font-size:11px}.pump-daily-progress b{color:#fff;font-size:19px}.pump-daily-progress b em{font-style:normal;font-size:11px;color:#e7c8b4}.pump-daily-progress span{color:#a9a09a;font-size:10px;line-height:1.35}
   `;
   document.head.append(style);
 
@@ -154,7 +207,7 @@
     if (goal) write({ ...read(), goal });
   });
 
-  const refresh = () => { mountOnboarding(); improveSummary(); improveNutrition(); };
+  const refresh = () => { mountOnboarding(); improveSummary(); improveNutrition(); improveTraining(); improveToday(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
