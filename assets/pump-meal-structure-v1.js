@@ -169,7 +169,65 @@
       body: JSON.stringify({ user_id: session.user.id, date: day, menu_key: key, name: snack.title, calories: Number(snack.calories.replace(/[^0-9]/g, '')), protein: Number(snack.protein.replace(/[^0-9]/g, '')) })
     });
     if (!add.ok) throw new Error('לא הצלחנו לשמור את ארוחת הביניים.');
+    sessionStorage.setItem('pump-return-to-food', 'true');
     window.location.reload();
+  };
+
+  const restoreFoodScreen = () => {
+    if (sessionStorage.getItem('pump-return-to-food') !== 'true') return;
+    if (document.querySelector('.menu-list')) { sessionStorage.removeItem('pump-return-to-food'); return; }
+    const button = [...document.querySelectorAll('.bottom-nav button')].find((item) => item.textContent.includes('תזונה'));
+    if (button) button.click();
+  };
+
+  const syncSavedSnack = async (index, card) => {
+    const session = snackSession();
+    if (!session) return;
+    const key = `snack-${index}`;
+    const headers = { apikey: 'sb_publishable_DlOsq6M0Wrwl_9lIH1qvQQ_bKJxwgNg', Authorization: `Bearer ${session.access_token}` };
+    const response = await fetch(`https://aebysqjymsjepvslidjl.supabase.co/rest/v1/food_entries?select=id,name,calories,protein&user_id=eq.${session.user.id}&date=eq.${snackDate()}&menu_key=eq.${key}`, { headers });
+    if (!response.ok) return;
+    const [saved] = await response.json();
+    if (!saved) return;
+    card.classList.add('meal-done');
+    card.querySelector('.menu-meta b').textContent = `✓ ארוחת ביניים ${index + 1} נאכל`;
+    card.querySelector('h3').textContent = saved.name;
+    card.querySelector('small').textContent = `כ־${saved.protein} גרם חלבון · כ־${saved.calories} קל׳`;
+    card.querySelector('.meal-swap').remove();
+    const oldButton = card.querySelector('.meal-toggle');
+    const button = oldButton.cloneNode(true);
+    oldButton.replaceWith(button);
+    button.textContent = '✓ נאכל היום — ביטול';
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        await fetch(`https://aebysqjymsjepvslidjl.supabase.co/rest/v1/food_entries?id=eq.${saved.id}`, { method: 'DELETE', headers });
+        sessionStorage.setItem('pump-return-to-food', 'true');
+        window.location.reload();
+      } catch (_) { button.disabled = false; button.textContent = 'נסו שוב'; }
+    };
+  };
+
+  const syncLoggedFoodRemoval = () => {
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('.logged-food button[aria-label^="הסרת "]');
+      if (!button) return;
+      const name = button.getAttribute('aria-label').replace('הסרת ', '');
+      const cards = [...document.querySelectorAll('.menu-list > article')];
+      const card = cards.find((item) => item.querySelector('h3')?.textContent.trim() === name);
+      if (!card) return;
+      window.setTimeout(async () => {
+        const session = snackSession();
+        if (!session) return;
+        const index = cards.indexOf(card);
+        const isSnack = card.classList.contains('pump-snack-meal');
+        const key = isSnack ? `snack-${[...document.querySelectorAll('.pump-snack-meal')].indexOf(card)}` : `menu-${index}`;
+        const headers = { apikey: 'sb_publishable_DlOsq6M0Wrwl_9lIH1qvQQ_bKJxwgNg', Authorization: `Bearer ${session.access_token}` };
+        if (!isSnack) await fetch(`https://aebysqjymsjepvslidjl.supabase.co/rest/v1/meal_actions?user_id=eq.${session.user.id}&date=eq.${snackDate()}&meal_key=eq.${key}`, { method: 'DELETE', headers });
+        sessionStorage.setItem('pump-return-to-food', 'true');
+        window.location.reload();
+      }, 500);
+    });
   };
 
   const improveNutrition = () => {
@@ -193,6 +251,7 @@
         try { await saveSnack(index, snack, button); } catch (error) { button.disabled = false; button.textContent = error.message || 'נסו שוב'; }
       });
       menuList.append(card);
+      syncSavedSnack(index, card).catch(() => {});
     });
     const count = document.querySelector('.menu-title b');
     if (count) count.textContent = plan.meals;
@@ -244,7 +303,7 @@
     .pump-meal-question{margin:13px 0}.pump-meal-question p{margin:0 0 7px;font-size:13px;font-weight:800}.pump-meal-choices{display:flex;flex-wrap:wrap;gap:7px}
     .pump-meal-choices button{border:1px solid #373737;border-radius:999px;background:#222;color:#eaeaea;padding:8px 10px;font:inherit;font-size:12px}.pump-meal-choices button.active{border-color:#ff6b00;background:#ff6b001a;color:#ff9c56}
     .pump-meal-result{display:grid;gap:4px;margin-top:15px;padding:12px;border-radius:13px;background:#18251c;border:1px solid #24c66b66}.pump-meal-result small{color:#7ee4a5}.pump-meal-result b{color:#fff;font-size:16px}.pump-meal-result span{color:#b7c8bb;font-size:12px;line-height:1.4}
-    .pump-meal-source-hidden{display:none!important}.pump-snack-meal{border:1px solid #303030!important;background:#181818!important}.pump-snack-meal .menu-meta b{color:#fff!important}.pump-snack-meal .menu-meta span{color:#aaa!important}.pump-snack-meal h3{font-size:16px}
+    .pump-meal-source-hidden{display:none!important}.pump-snack-meal{border:1px solid #303030!important;background:#181818!important}.pump-snack-meal .menu-meta b{color:#fff!important}.pump-snack-meal .menu-meta span{color:#aaa!important}.pump-snack-meal h3{font-size:16px}.pump-snack-meal.meal-done{border-color:#24c66b66!important;background:linear-gradient(135deg,#16261a,#111)!important}.pump-snack-meal.meal-done .menu-meta b{color:#7ee4a5!important}
     .pump-daily-progress{display:grid;gap:3px;min-width:142px;padding:12px 13px;border:1px solid #ff6b005c;border-radius:14px;background:linear-gradient(135deg,#21160e,#15110d);text-align:right}.pump-daily-progress small{color:#ffad75;font-size:11px}.pump-daily-progress b{color:#fff;font-size:19px}.pump-daily-progress b em{font-style:normal;font-size:11px;color:#e7c8b4}.pump-daily-progress span{color:#a9a09a;font-size:10px;line-height:1.35}
   `;
   document.head.append(style);
@@ -255,7 +314,8 @@
     if (goal) write({ ...read(), goal });
   });
 
-  const refresh = () => { mountOnboarding(); improveSummary(); improveNutrition(); improveTraining(); improveToday(); };
+  syncLoggedFoodRemoval();
+  const refresh = () => { restoreFoodScreen(); mountOnboarding(); improveSummary(); improveNutrition(); improveTraining(); improveToday(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
