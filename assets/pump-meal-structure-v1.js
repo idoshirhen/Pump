@@ -127,94 +127,29 @@
     list.append(item);
   };
 
+  const snackCards = (count) => {
+    const choices = [
+      { title: 'פרי וסקיר / יוגורט PRO', detail: 'פרי אחד עם סקיר או יוגורט חלבון. אפשר להחליף במעדן חלבון.', calories: 'כ־170 קל׳', protein: 'כ־18 גרם חלבון' },
+      { title: 'כריך קטן עם חלבון', detail: '2 פרוסות לחם מלא עם קוטג׳, טונה או ביצה. אפשר להחליף בשייק חלבון ובננה.', calories: 'כ־250 קל׳', protein: 'כ־20 גרם חלבון' }
+    ];
+    return choices.slice(0, count);
+  };
+
   const improveNutrition = () => {
+    const menuList = document.querySelector('.menu-list');
+    if (!menuList || document.querySelector('.pump-snack-meal')) return;
     const plan = inferPlan();
     const mainMeals = plan.pattern === 'two' ? 2 : 3;
+    snackCards(plan.snacks).forEach((snack, index) => {
+      const card = document.createElement('article');
+      card.className = 'pump-snack-meal';
+      card.innerHTML = `<div class="menu-meta"><b>ארוחת ביניים ${index + 1}</b><span>ביניים</span></div><p class="meal-label">${index === 0 ? 'שומרים על שובע בין הארוחות' : 'סוגרים את הפער עד לארוחה הבאה'}</p><h3>${snack.title}</h3><p>${snack.detail}</p><small>${snack.protein} · ${snack.calories}</small>`;
+      menuList.append(card);
+    });
     const count = document.querySelector('.menu-title b');
     if (count) count.textContent = plan.meals;
     const titleCount = document.querySelector('.menu-title small');
     if (titleCount) titleCount.textContent = `${mainMeals} ארוחות עיקריות + ${plan.snacks} ארוחות ביניים`;
-  };
-
-  /* Kept outside the compiled bundle: a broken enhancement must never break the route. */
-  const SB = 'https://aebysqjymsjepvslidjl.supabase.co';
-  const SB_KEY = 'sb_publishable_DlOsq6M0Wrwl_9lIH1qvQQ_bKJxwgNg';
-  const snacks = [
-    { title: 'פרי וסקיר / יוגורט PRO', detail: 'פרי אחד עם סקיר או יוגורט חלבון. אפשר להחליף במעדן חלבון.', calories: 170, protein: 18 },
-    { title: 'כריך קטן עם חלבון', detail: '2 פרוסות לחם מלא עם קוטג׳, טונה או ביצה. אפשר להחליף בשייק חלבון ובננה.', calories: 250, protein: 20 },
-    { title: 'אגוזים ופרי', detail: 'חופן קטן של אגוזים עם פרי. אפשר להחליף ביוגורט חלבון.', calories: 180, protein: 8 }
-  ];
-  const number = (value) => Number(String(value || '').replace(/[^0-9.]/g, '')) || 0;
-  const date = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-  const getSession = () => {
-    try { for (let i = 0; i < localStorage.length; i += 1) { const k = localStorage.key(i); if (!k?.includes('auth-token')) continue; const v = JSON.parse(localStorage.getItem(k) || '{}'); const s = v.currentSession || v.session || v; if (s?.access_token && s?.user?.id) return s; } } catch (_) {}
-    return null;
-  };
-  const api = async (path, token, init = {}) => {
-    const response = await fetch(`${SB}/rest/v1/${path}`, { ...init, headers: { apikey: SB_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers || {}) } });
-    if (!response.ok) throw new Error('לא הצלחנו לשמור. נסו שוב.');
-    return response.status === 204 ? null : response.json();
-  };
-  const coreCards = () => [...document.querySelectorAll('.menu-list > article:not(.pump-snack-meal)')];
-  const distribute = (plan) => {
-    const cards = coreCards(), snackTotal = snacks.slice(0, plan.snacks || 0).reduce((s, x) => s + x.calories, 0);
-    const total = cards.reduce((s, c) => s + number(c.dataset.pumpBaseCalories || c.querySelector('small')?.textContent), 0);
-    if (!total || snackTotal >= total) return;
-    let left = total - snackTotal;
-    cards.forEach((card, i) => {
-      const small = card.querySelector('small');
-      const calories = number(card.dataset.pumpBaseCalories || small?.textContent);
-      const protein = number(card.dataset.pumpBaseProtein || small?.textContent.split('·')[0]);
-      card.dataset.pumpBaseCalories = calories; card.dataset.pumpBaseProtein = protein;
-      card.dataset.pumpCalories = i === cards.length - 1 ? left : Math.round(calories / total * (total - snackTotal) / 10) * 10;
-      left -= Number(card.dataset.pumpCalories);
-      card.dataset.pumpProtein = Math.max(0, protein - Math.ceil(snackTotal ? snacks.slice(0, plan.snacks).reduce((s, x) => s + x.protein, 0) / cards.length : 0));
-      if (small && !card.classList.contains('meal-done')) small.textContent = `כ־${card.dataset.pumpProtein} גרם חלבון · כ־${card.dataset.pumpCalories} קל׳`;
-    });
-  };
-  const normalizeCore = async () => {
-    const s = getSession(); if (!s) return;
-    await Promise.all(coreCards().map((card, i) => api(`food_entries?user_id=eq.${s.user.id}&date=eq.${date()}&menu_key=eq.menu-${i}`, s.access_token, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ calories: Number(card.dataset.pumpCalories), protein: Number(card.dataset.pumpProtein) }) })));
-  };
-  const syncSnackCard = async (index, card) => {
-    const s = getSession(); if (!s) return;
-    const key = `pump-snack-${index}`, rows = await api(`food_entries?select=id,name,calories,protein&user_id=eq.${s.user.id}&date=eq.${date()}&menu_key=eq.${key}`, s.access_token);
-    const saved = rows?.[0]; if (!saved) return;
-    card.classList.add('meal-done');
-    card.querySelector('h3').textContent = saved.name;
-    card.querySelector('small').textContent = `כ־${saved.protein} גרם חלבון · כ־${saved.calories} קל׳`;
-    card.querySelector('.meal-swap').remove();
-    const button = card.querySelector('.meal-toggle');
-    button.textContent = '✓ נאכל היום — ביטול';
-    button.onclick = async () => {
-      button.disabled = true;
-      try { await api(`food_entries?id=eq.${saved.id}`, s.access_token, { method: 'DELETE' }); await api(`meal_actions?user_id=eq.${s.user.id}&date=eq.${date()}&meal_key=eq.${key}`, s.access_token, { method: 'DELETE' }); window.location.reload(); } catch (_) { button.disabled = false; button.textContent = 'שגיאה — נסו שוב'; }
-    };
-  };
-  const addSnackCards = () => {
-    try {
-      const list = document.querySelector('.menu-list'); if (!list || list.querySelector('.pump-snack-meal')) return;
-      const plan = inferPlan(); if (!plan?.snacks) return; distribute(plan);
-      snacks.slice(0, plan.snacks).forEach((initial, index) => {
-        let selected = initial;
-        const card = document.createElement('article'); card.className = 'pump-snack-meal';
-        card.innerHTML = `<div class="menu-meta"><b>ארוחת ביניים ${index + 1}</b><span>חלופה 1 מתוך 3</span></div><p class="meal-label">${index ? 'סוגרים את הפער עד לארוחה הבאה' : 'שומרים על שובע בין הארוחות'}</p><h3>${selected.title}</h3><p>${selected.detail}</p><small>כ־${selected.protein} גרם חלבון · כ־${selected.calories} קל׳</small><div class="meal-buttons"><button class="meal-swap" type="button">↻ החלפה</button><button class="meal-toggle" type="button">✓ אכלתי</button></div>`;
-        card.querySelector('.meal-swap').onclick = () => { selected = snacks[(snacks.indexOf(selected) + 1) % snacks.length]; card.querySelector('h3').textContent = selected.title; card.querySelector('h3').nextElementSibling.textContent = selected.detail; card.querySelector('small').textContent = `כ־${selected.protein} גרם חלבון · כ־${selected.calories} קל׳`; };
-        card.querySelector('.meal-toggle').onclick = async () => {
-          const s = getSession(), button = card.querySelector('.meal-toggle'); if (!s) { button.textContent = 'יש להתחבר מחדש'; return; }
-          button.disabled = true; button.textContent = 'שומרים…';
-          try {
-            const key = `pump-snack-${index}`, day = date();
-            await api(`food_entries?user_id=eq.${s.user.id}&date=eq.${day}&menu_key=eq.${key}`, s.access_token, { method: 'DELETE' });
-            await api('food_entries', s.access_token, { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: s.user.id, date: day, name: selected.title, calories: selected.calories, protein: selected.protein, menu_key: key }) });
-            await api('meal_actions?on_conflict=user_id,date,meal_key', s.access_token, { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ user_id: s.user.id, date: day, meal_key: key, status: 'done', selected_option: 0 }) });
-            await normalizeCore(); window.setTimeout(() => window.location.reload(), 250);
-          } catch (_) { button.disabled = false; button.textContent = 'שגיאה — נסו שוב'; }
-        };
-        list.append(card);
-        syncSnackCard(index, card).catch(() => {});
-      });
-    } catch (_) { /* The screen stays usable even if this optional enhancement fails. */ }
   };
 
   const exerciseNames = {
@@ -261,7 +196,7 @@
     .pump-meal-question{margin:13px 0}.pump-meal-question p{margin:0 0 7px;font-size:13px;font-weight:800}.pump-meal-choices{display:flex;flex-wrap:wrap;gap:7px}
     .pump-meal-choices button{border:1px solid #373737;border-radius:999px;background:#222;color:#eaeaea;padding:8px 10px;font:inherit;font-size:12px}.pump-meal-choices button.active{border-color:#ff6b00;background:#ff6b001a;color:#ff9c56}
     .pump-meal-result{display:grid;gap:4px;margin-top:15px;padding:12px;border-radius:13px;background:#18251c;border:1px solid #24c66b66}.pump-meal-result small{color:#7ee4a5}.pump-meal-result b{color:#fff;font-size:16px}.pump-meal-result span{color:#b7c8bb;font-size:12px;line-height:1.4}
-    .pump-meal-source-hidden{display:none!important}.pump-snack-meal button:disabled{opacity:.65}
+    .pump-meal-source-hidden{display:none!important}.pump-snack-meal{border:1px solid #24c66b66!important;background:linear-gradient(135deg,#16261a,#111)!important}.pump-snack-meal .menu-meta b{color:#7ee4a5!important}.pump-snack-meal .menu-meta span{color:#7ee4a5!important}.pump-snack-meal h3{font-size:16px}
     .pump-daily-progress{display:grid;gap:3px;min-width:142px;padding:12px 13px;border:1px solid #ff6b005c;border-radius:14px;background:linear-gradient(135deg,#21160e,#15110d);text-align:right}.pump-daily-progress small{color:#ffad75;font-size:11px}.pump-daily-progress b{color:#fff;font-size:19px}.pump-daily-progress b em{font-style:normal;font-size:11px;color:#e7c8b4}.pump-daily-progress span{color:#a9a09a;font-size:10px;line-height:1.35}
   `;
   document.head.append(style);
@@ -272,12 +207,7 @@
     if (goal) write({ ...read(), goal });
   });
 
-  document.addEventListener('click', (event) => {
-    const button = event.target.closest('.menu-list > article:not(.pump-snack-meal) .meal-toggle');
-    if (!button?.textContent.includes('אכלתי')) return;
-    window.setTimeout(() => normalizeCore().catch(() => {}), 700);
-  }, true);
-  const refresh = () => { mountOnboarding(); improveSummary(); improveNutrition(); addSnackCards(); improveTraining(); improveToday(); };
+  const refresh = () => { mountOnboarding(); improveSummary(); improveNutrition(); improveTraining(); improveToday(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
