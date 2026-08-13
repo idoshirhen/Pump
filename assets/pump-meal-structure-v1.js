@@ -197,6 +197,7 @@
     const oldButton = card.querySelector('.meal-toggle');
     const button = oldButton.cloneNode(true);
     oldButton.replaceWith(button);
+    button.classList.add('done');
     button.textContent = '✓ נאכל היום — ביטול';
     button.onclick = async () => {
       button.disabled = true;
