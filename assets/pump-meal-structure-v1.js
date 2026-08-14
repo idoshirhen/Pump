@@ -320,7 +320,8 @@
     if (goal) write({ ...read(), goal });
   });
 
-  const refresh = () => { restoreFoodScreen(); mountOnboarding(); improveSummary(); improveTraining(); improveToday(); };
+  syncLoggedFoodRemoval();
+  const refresh = () => { restoreFoodScreen(); mountOnboarding(); improveSummary(); improveNutrition(); improveTraining(); improveToday(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
