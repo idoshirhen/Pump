@@ -10,7 +10,7 @@ const helpers = bundle.slice(start, end);
 const Ma = () => ({ meals: [], snack: 'fallback snack', note: 'fallback note' });
 const Na = () => ({ a: {}, b: {}, location: 'fallback', weekly: [] });
 const ja = () => ({ calories: 1600, protein: 112 });
-const api = new Function('Ma', 'Na', 'ja', `${helpers};return {pumpPersonalizedMenu,pumpPersonalizedSnacks,pumpPersonalizedTargets,pumpPersonalizedTraining};`)(Ma, Na, ja);
+const api = new Function('Ma', 'Na', 'ja', `${helpers};return {pumpOnboardingPreferences,pumpPersonalizedMenu,pumpPersonalizedSnacks,pumpPersonalizedTargets,pumpPersonalizedTraining};`)(Ma, Na, ja);
 
 const base = {
   diet: '', goal: 'lose', startWeight: 70, targetWeight: 62,
@@ -23,6 +23,14 @@ const veganNoGlutenSoy = {
   prep: 'quick', budget: 'budget', equipment: ['dumbbells'],
   trainingFocus: 'upper', limitation: 'none', sessionMinutes: '20'
 };
+const onboardingDefaults = api.pumpOnboardingPreferences({ ...base, personalization: {} });
+assert.deepEqual(onboardingDefaults.equipment, ['bodyweight']);
+assert.equal(onboardingDefaults.sessionMinutes, '30');
+assert.equal(onboardingDefaults.foodStyle, 'regular');
+const onboardingGym = api.pumpOnboardingPreferences({ ...base, trainingPlace: 'gym', personalization: { foodStyle: 'vegetarian' } });
+assert.deepEqual(onboardingGym.equipment, ['gym']);
+assert.equal(onboardingGym.foodStyle, 'vegetarian');
+
 const veganMenu = api.pumpPersonalizedMenu({ ...base, personalization: veganNoGlutenSoy }, { calories: 1600, protein: 126 });
 const veganOptions = veganMenu.meals.flatMap((meal) => meal.options);
 assert.equal(veganOptions.length, 9);

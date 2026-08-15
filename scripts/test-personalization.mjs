@@ -6,11 +6,10 @@ import { pathToFileURL } from 'node:url';
 const moduleRoot = process.env.PUMP_TEST_NODE_MODULES || '/tmp/pump-personalization-test-deps/node_modules';
 const { JSDOM } = await import(pathToFileURL(join(moduleRoot, 'jsdom/lib/api.js')).href);
 const bundle = await readFile(new URL('../assets/index-personalized-v2.js', import.meta.url), 'utf8');
-const personalizationUi = await readFile(new URL('../assets/pump-personalization-v2.js', import.meta.url), 'utf8');
 const wait = (milliseconds = 20) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 async function waitFor(check, label) {
-  for (let attempt = 0; attempt < 140; attempt += 1) {
+  for (let attempt = 0; attempt < 160; attempt += 1) {
     if (check()) return;
     await wait();
   }
@@ -30,13 +29,14 @@ function response(data, status = 200) {
 const foods = [];
 const actions = [];
 let personalization = null;
-let updateEvents = 0;
+let profileSaveCount = 0;
+let personalizationSaveCount = 0;
 const profile = {
   name: 'בדיקת PUMP', sex: 'female', age: 28, height: 165,
   start_weight: 70, target_weight: 62, activity: 'light', diet: '', goal: 'lose',
   pace: 'steady', training_level: 'beginner', training_place: 'home', training_days: 3,
   meal_pattern: 'three', sleep: 'sixToSeven', main_challenge: 'consistency',
-  weekend_eating: false, needs_medical_clearance: false, onboarding_done: true,
+  weekend_eating: false, needs_medical_clearance: false, onboarding_done: false,
 };
 
 const dom = new JSDOM('<!doctype html><div id="root"></div>', {
@@ -53,11 +53,19 @@ window.fetch = async (input, init = {}) => {
   const objectResponse = accept.includes('vnd.pgrst.object');
   if (url.pathname.endsWith('/auth/v1/user')) return response({ id: 'user-1', email: 'test@pump.local' });
   if (url.pathname.endsWith('/rest/v1/profiles')) {
+    if (method === 'POST') {
+      const payload = JSON.parse(init.body);
+      Object.assign(profile, Array.isArray(payload) ? payload[0] : payload);
+      profileSaveCount += 1;
+      return response([profile], 201);
+    }
     return response(objectResponse ? profile : [profile]);
   }
   if (url.pathname.endsWith('/rest/v1/user_personalization')) {
     if (method === 'POST') {
-      personalization = JSON.parse(init.body).preferences;
+      const payload = JSON.parse(init.body);
+      personalization = (Array.isArray(payload) ? payload[0] : payload).preferences;
+      personalizationSaveCount += 1;
       return response([{ user_id: 'user-1', preferences: personalization }], 201);
     }
     const row = personalization ? { user_id: 'user-1', preferences: personalization } : null;
@@ -106,40 +114,64 @@ window.localStorage.setItem('sb-aebysqjymsjepvslidjl-auth-token', JSON.stringify
   user: { id: 'user-1', email: 'test@pump.local' },
 }));
 window.skippedMealCount = 0;
-window.addEventListener('pump-personalization:updated', () => { updateEvents += 1; });
 
 window.eval(bundle);
-await waitFor(() => window.document.querySelector('.bottom-nav'), 'signed-in application');
-window.eval(personalizationUi);
-await waitFor(() => window.document.querySelector('.pump-personalization-card'), 'personalization card');
+await waitFor(() => window.document.querySelector('.onboarding'), 'first-time onboarding');
+assert.equal(window.document.querySelector('.pump-personalization-card'), null, 'no persistent personalization card is mounted');
+assert.match(window.document.querySelector('.onboarding-top span').textContent, /שלב 1 מתוך 8/);
 
 const originalUrl = window.location.href;
-window.document.querySelector('.pump-personalization-open').click();
-await waitFor(() => window.document.querySelector('.pump-personalization-modal'), 'personalization modal');
+const nextButton = () => window.document.querySelector('.onboard-footer .primary');
+const currentStep = () => window.document.querySelector('.onboarding-top span').textContent.trim();
+async function next(stepNumber) {
+  nextButton().click();
+  await waitFor(() => currentStep().includes(`שלב ${stepNumber} מתוך 8`), `onboarding step ${stepNumber}`);
+}
 
-function clickChoice(text) {
-  const button = [...window.document.querySelectorAll('.pump-personalization-choices button')]
-    .find((candidate) => candidate.textContent.trim() === text);
+function setInput(input, value) {
+  input.value = value;
+  input.dispatchEvent(new window.Event('input', { bubbles: true }));
+  input.dispatchEvent(new window.Event('change', { bubbles: true }));
+}
+
+function clickOnboardingChoice(text) {
+  const button = [...window.document.querySelectorAll('.onboarding button')]
+    .find((candidate) => candidate.textContent.includes(text));
   assert.ok(button, `choice exists: ${text}`);
   button.click();
 }
 
-clickChoice('טבעוני/ת');
-clickChoice('גלוטן');
-clickChoice('סויה / טופו');
-clickChoice('חלבון צמחי');
-clickChoice('משקולות יד');
-clickChoice('פלג גוף עליון');
-clickChoice('20 דקות');
-window.document.querySelector('.pump-personalization-modal').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
-await waitFor(() => personalization?.foodStyle === 'vegan', 'preference save');
-await waitFor(() => !window.document.querySelector('.pump-personalization-modal'), 'modal closes after save');
-assert.equal(window.location.href, originalUrl, 'saving preferences does not navigate or reload');
-assert.equal(updateEvents, 1, 'one native update event is emitted');
+await next(2);
+setInput(window.document.querySelector('.onboarding input'), 'בדיקת PUMP');
+await next(3);
+await next(4);
+await next(5);
+await next(6);
+
+clickOnboardingChoice('טבעוני/ת');
+clickOnboardingChoice('גלוטן');
+clickOnboardingChoice('סויה / טופו');
+clickOnboardingChoice('חלבון צמחי');
+await next(7);
+
+clickOnboardingChoice('משקולות יד');
+clickOnboardingChoice('פלג גוף עליון');
+clickOnboardingChoice('20 דקות');
+await next(8);
+assert.equal(nextButton().textContent.includes('אישור המסלול'), true, 'the final confirmation comes after preferences');
+nextButton().click();
+
+await waitFor(() => profile.onboarding_done === true, 'profile completion save');
+await waitFor(() => personalization?.foodStyle === 'vegan', 'onboarding preference save');
+await waitFor(() => window.document.querySelector('.bottom-nav'), 'signed-in application after onboarding');
+assert.equal(profileSaveCount, 1, 'profile is saved once at onboarding completion');
+assert.equal(personalizationSaveCount, 1, 'preferences are saved once at onboarding completion');
+assert.equal(window.location.href, originalUrl, 'completing onboarding does not navigate or reload');
 assert.deepEqual(personalization.avoid.sort(), ['gluten', 'soy']);
 assert.equal(personalization.equipment.includes('dumbbells'), true);
 assert.equal(personalization.trainingFocus, 'upper');
 assert.equal(personalization.sessionMinutes, '20');
+assert.equal(window.document.querySelector('.pump-personalization-card'), null, 'home stays free of a personalization card');
 
 const foodTab = [...window.document.querySelectorAll('.bottom-nav button')].find((button) => button.textContent.includes('תזונה'));
 foodTab.click();
@@ -169,4 +201,4 @@ assert.equal(window.document.querySelector('.exercise-list article small').textC
 assert.equal(pageErrors.length, 0, `page errors: ${pageErrors.join(', ')}`);
 
 window.close();
-console.log('personalization app flow checks passed');
+console.log('personalization onboarding app flow checks passed');
