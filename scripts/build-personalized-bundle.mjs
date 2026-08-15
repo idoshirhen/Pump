@@ -45,7 +45,7 @@ const nativeMealsEnd = '}function Na(e)';
 const nativeMealsStartIndex = bundle.indexOf(nativeMealsStart);
 const nativeMealsEndIndex = bundle.indexOf(nativeMealsEnd, nativeMealsStartIndex);
 if (nativeMealsStartIndex < 0 || nativeMealsEndIndex < 0) throw new Error('Could not find the native meal builder.');
-const nativeMeals = `function pumpNativeMeals(e,t,n){let r=0;try{r=Number(JSON.parse(localStorage.getItem(\`pump-meal-structure-v1\`)||\`{}\`).plan?.snacks)||0}catch{}r||(r=e.mealPattern===\`two\`||e.mealPattern===\`flexible\`||e.goal===\`gain\`?2:1),r=Math.min(2,Math.floor(r));let i=Number(t?.calories)||0,a=r===1?[Math.round(Math.min(220,Math.max(140,i*.13))/10)*10]:[Math.round(Math.min(190,Math.max(140,i*.11))/10)*10,Math.round(Math.min(260,Math.max(190,i*.16))/10)*10],o=Math.max(0,i-a.reduce((e,t)=>e+t,0)),s=pumpCatalogPersonalizedMenu(e,{...t,calories:o},n),c=pumpCatalogPersonalizedSnacks(e,a,n);return{...s,meals:[...s.meals,...c.slice(0,r)]}}`;
+const nativeMeals = `function pumpNativeMeals(e,t,n){let r=null;try{let i=JSON.parse(localStorage.getItem(\`pump-meal-structure-v1\`)||\`{}\`).plan?.snacks,a=Number(i);Number.isFinite(a)&&a>0&&(r=Math.floor(a))}catch{}return pumpCatalogDailyMenu(e,t,n,r)}`;
 bundle = `${bundle.slice(0, nativeMealsStartIndex)}${safeHelpers}${catalogHelpers}${onboardingHelpers}${nativeMeals}function Na(e)${bundle.slice(nativeMealsEndIndex + nativeMealsEnd.length)}`;
 
 replaceOnce(

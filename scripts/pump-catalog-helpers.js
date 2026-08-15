@@ -203,23 +203,194 @@ function pumpCatalogAmount(ingredient, scale) {
   return `${amount} ${ingredient.unit} ${ingredient.name}`;
 }
 
-function pumpCatalogScale(recipe, targetCalories, profile) {
-  const requested = Number(targetCalories) || recipe.calories;
-  const scale = Math.max(0.72, Math.min(1.45, requested / recipe.calories));
-  const calories = Math.round(recipe.calories * scale / 10) * 10;
-  const proteinGrams = Math.max(1, Math.round(recipe.protein * scale));
-  const feedback = pumpCatalogFeedback(profile, recipe.id);
+// These additions are deliberately part of the meal, not extra, unplanned meals.
+// They let a high-energy target stay practical without silently losing calories when
+// a recipe reaches a normal portion size. Tags use the same preference filters as
+// the recipe catalogue.
+const pumpCatalogProteinBoosters = [
+  { id: 'extra-chicken', title: 'חזה עוף מבושל', tags: ['meat', 'chicken', 'quick', 'budget'], caloriesPerGram: 1.65, proteinPerGram: 0.31 },
+  { id: 'extra-tuna', title: 'טונה במים מסוננת', tags: ['fish', 'tuna', 'quick', 'budget'], caloriesPerGram: 1.16, proteinPerGram: 0.26 },
+  { id: 'extra-skyr', title: 'סקיר או יוגורט PRO', tags: ['vegetarian', 'dairy', 'yogurt', 'quick'], caloriesPerGram: 0.62, proteinPerGram: 0.11 },
+  { id: 'extra-cottage', title: 'קוטג׳ 5%', tags: ['vegetarian', 'dairy', 'cottage', 'quick', 'budget'], caloriesPerGram: 0.90, proteinPerGram: 0.11 },
+  { id: 'extra-egg-whites', title: 'חלבון ביצה', tags: ['vegetarian', 'eggs', 'quick', 'budget'], caloriesPerGram: 0.52, proteinPerGram: 0.11 },
+  { id: 'extra-tofu', title: 'טופו צרוב', tags: ['vegan', 'plant', 'tofu', 'soy', 'quick', 'budget'], caloriesPerGram: 1.20, proteinPerGram: 0.13 },
+  { id: 'extra-lentils', title: 'עדשים מבושלות', tags: ['vegan', 'plant', 'legumes', 'quick', 'budget'], caloriesPerGram: 1.16, proteinPerGram: 0.09 },
+  { id: 'extra-pea-protein', title: 'אבקת חלבון אפונה', tags: ['vegan', 'plant', 'quick'], caloriesPerGram: 4.00, proteinPerGram: 0.78 },
+];
+
+const pumpCatalogEnergyBoosters = [
+  { id: 'extra-oats', title: 'שיבולת שועל', tags: ['vegan', 'plant', 'oats', 'gluten', 'quick', 'budget'], slots: ['breakfast', 'snack'], caloriesPerGram: 3.80, proteinPerGram: 0.13, maxGrams: 80 },
+  { id: 'extra-bread', title: 'לחם מלא', tags: ['vegan', 'plant', 'bread', 'gluten', 'quick', 'budget'], slots: ['breakfast', 'lunch', 'dinner', 'snack'], caloriesPerGram: 2.50, proteinPerGram: 0.09, maxGrams: 120 },
+  { id: 'extra-rice', title: 'אורז מבושל', tags: ['vegan', 'plant', 'rice', 'quick', 'budget'], slots: ['lunch', 'dinner', 'snack'], caloriesPerGram: 1.30, proteinPerGram: 0.027, maxGrams: 300 },
+  { id: 'extra-pasta', title: 'פסטה מבושלת', tags: ['vegan', 'plant', 'pasta', 'gluten', 'quick', 'budget'], slots: ['lunch', 'dinner'], caloriesPerGram: 1.55, proteinPerGram: 0.055, maxGrams: 280 },
+  { id: 'extra-potato', title: 'תפוח אדמה אפוי', tags: ['vegan', 'plant', 'potato', 'quick', 'budget'], slots: ['lunch', 'dinner'], caloriesPerGram: 0.86, proteinPerGram: 0.02, maxGrams: 420 },
+  { id: 'extra-tahini', title: 'טחינה', tags: ['vegan', 'plant', 'tahini', 'quick', 'budget'], slots: ['breakfast', 'lunch', 'dinner', 'snack'], caloriesPerGram: 5.95, proteinPerGram: 0.17, maxGrams: 40 },
+  { id: 'extra-avocado', title: 'אבוקדו', tags: ['vegan', 'plant', 'quick'], slots: ['breakfast', 'lunch', 'dinner'], caloriesPerGram: 1.60, proteinPerGram: 0.02, maxGrams: 180 },
+  { id: 'extra-nuts', title: 'אגוזים או חמאת בוטנים', tags: ['vegan', 'plant', 'nuts', 'quick', 'budget'], slots: ['breakfast', 'snack'], caloriesPerGram: 6.00, proteinPerGram: 0.20, maxGrams: 40 },
+  { id: 'extra-dates', title: 'תמרים', tags: ['vegan', 'plant', 'fruit', 'quick', 'budget'], slots: ['breakfast', 'snack'], caloriesPerGram: 2.80, proteinPerGram: 0.02, maxGrams: 90 },
+  { id: 'extra-olive-oil', title: 'שמן זית', tags: ['vegan', 'plant', 'quick'], slots: ['breakfast', 'lunch', 'dinner', 'snack'], caloriesPerGram: 9.00, proteinPerGram: 0, maxGrams: 80, fallback: true },
+];
+
+function pumpCatalogAddOnAllowed(addOn, preferences) {
+  const tagged = { tags: addOn.tags };
+  return pumpFoodAllowed(tagged, preferences) && !preferences.dislikes.some((tag) => pumpHasTag(tagged, tag));
+}
+
+function pumpCatalogOverlapScore(addOn, recipe, preferences, slot) {
+  let score = 0;
+  if (addOn.slots?.includes(slot)) score += 7;
+  for (const tag of addOn.tags) {
+    if (pumpHasTag(recipe, tag)) score += 5;
+    if (preferences.proteins.includes(tag)) score += 4;
+    if (preferences.favorites.includes(tag)) score += 4;
+  }
+  if (preferences.prep === 'quick' && addOn.tags.includes('quick')) score += 2;
+  if (preferences.budget === 'budget' && addOn.tags.includes('budget')) score += 2;
+  return score;
+}
+
+function pumpCatalogProteinCandidates(recipe, preferences) {
+  return pumpCatalogProteinBoosters
+    .filter((addOn) => pumpCatalogAddOnAllowed(addOn, preferences))
+    .sort((left, right) => {
+      const leftScore = pumpCatalogOverlapScore(left, recipe, preferences, '') - left.caloriesPerGram / left.proteinPerGram;
+      const rightScore = pumpCatalogOverlapScore(right, recipe, preferences, '') - right.caloriesPerGram / right.proteinPerGram;
+      return rightScore - leftScore || left.id.localeCompare(right.id);
+    });
+}
+
+function pumpCatalogEnergyCandidates(recipe, preferences, slot) {
+  return pumpCatalogEnergyBoosters
+    .filter((addOn) => addOn.slots.includes(slot) && pumpCatalogAddOnAllowed(addOn, preferences))
+    .sort((left, right) => {
+      const leftScore = pumpCatalogOverlapScore(left, recipe, preferences, slot) - (left.fallback ? 3 : 0);
+      const rightScore = pumpCatalogOverlapScore(right, recipe, preferences, slot) - (right.fallback ? 3 : 0);
+      return rightScore - leftScore || left.id.localeCompare(right.id);
+    });
+}
+
+function pumpCatalogRoundGrams(grams) {
+  return Math.max(5, Math.round(grams / 5) * 5);
+}
+
+function pumpCatalogFormatBoost(addOn, grams) {
+  if (addOn.id === 'extra-olive-oil' && grams <= 7) return 'כפית שמן זית';
+  return `${pumpCatalogRoundGrams(grams)} גרם ${addOn.title}`;
+}
+
+function pumpCatalogFitProtein(recipe, targetCalories, targetProtein, proteinBooster) {
+  const calorieLimit = Math.max(1, targetCalories) / recipe.calories;
+  const proteinLimit = Math.max(0, targetProtein) / recipe.protein;
+  const hardLimit = Math.max(0, Math.min(calorieLimit, proteinLimit));
+  let scale = Math.min(1.1, hardLimit * 0.72);
+  const minimumBoostProtein = targetProtein >= proteinBooster.proteinPerGram * 5
+    ? proteinBooster.proteinPerGram * 5
+    : 0;
+  const maximumBaseForVisibleBoost = Math.max(0, (targetProtein - minimumBoostProtein) / recipe.protein);
+  scale = Math.min(scale, maximumBaseForVisibleBoost);
+
+  for (let attempt = 0; attempt < 16; attempt += 1) {
+    const baseCalories = recipe.calories * scale;
+    const baseProtein = recipe.protein * scale;
+    const proteinNeeded = Math.max(0, targetProtein - baseProtein);
+    const proteinGrams = proteinNeeded / proteinBooster.proteinPerGram;
+    const proteinCalories = proteinGrams * proteinBooster.caloriesPerGram;
+    if (baseCalories + proteinCalories <= targetCalories + 0.01) {
+      return { scale, baseCalories, baseProtein, proteinGrams, proteinCalories };
+    }
+    scale *= 0.72;
+  }
+
+  return null;
+}
+
+function pumpCatalogEnergyPlan(recipe, preferences, slot, effectiveCalories, availableProtein, proteinBooster) {
+  let remainingEffectiveCalories = Math.max(0, effectiveCalories);
+  let remainingProtein = Math.max(0, availableProtein);
+  const extras = [];
+  const candidates = pumpCatalogEnergyCandidates(recipe, preferences, slot);
+  const proteinCalorieRatio = proteinBooster.caloriesPerGram / proteinBooster.proteinPerGram;
+  const minimumBoostProtein = availableProtein >= proteinBooster.proteinPerGram * 5
+    ? proteinBooster.proteinPerGram * 5
+    : 0;
+  const fallback = candidates.find((addOn) => addOn.fallback && addOn.proteinPerGram === 0);
+
+  for (const addOn of candidates) {
+    if (addOn.fallback || remainingEffectiveCalories <= 0.01) continue;
+    const netCalories = addOn.caloriesPerGram - addOn.proteinPerGram * proteinCalorieRatio;
+    if (netCalories <= 0) continue;
+    const maxByProtein = addOn.proteinPerGram > 0 ? Math.max(0, remainingProtein - minimumBoostProtein) / addOn.proteinPerGram : Infinity;
+    const grams = Math.min(addOn.maxGrams, maxByProtein, remainingEffectiveCalories / netCalories);
+    if (grams < 5) continue;
+    extras.push({ ...addOn, grams, calories: grams * addOn.caloriesPerGram, protein: grams * addOn.proteinPerGram });
+    remainingEffectiveCalories = Math.max(0, remainingEffectiveCalories - grams * netCalories);
+    remainingProtein = Math.max(0, remainingProtein - grams * addOn.proteinPerGram);
+  }
+
+  if (fallback && remainingEffectiveCalories > 0.01) {
+    const grams = Math.min(fallback.maxGrams, remainingEffectiveCalories / fallback.caloriesPerGram);
+    if (grams > 0.01) {
+      extras.push({ ...fallback, grams, calories: grams * fallback.caloriesPerGram, protein: 0 });
+      remainingEffectiveCalories = Math.max(0, remainingEffectiveCalories - grams * fallback.caloriesPerGram);
+    }
+  }
+
+  return { extras, remainingEffectiveCalories, remainingProtein };
+}
+
+function pumpCatalogScale(recipe, targetCalories, targetProtein, profile, slot) {
+  const requestedCalories = Math.max(100, Math.round(Number(targetCalories) || recipe.calories));
+  const requestedProtein = Math.max(1, Math.round(Number(targetProtein) || recipe.protein));
+  const preferences = pumpCatalogPreferences(profile);
+  const proteinCandidates = pumpCatalogProteinCandidates(recipe, preferences);
+  const fit = proteinCandidates.map((candidate) => ({ candidate, fit: pumpCatalogFitProtein(recipe, requestedCalories, requestedProtein, candidate) }))
+    .find((entry) => entry.fit);
+
+  // A pea-protein fallback is deliberately present in the catalogue for the rare
+  // profile that excludes every other source. It is compatible with vegan, dairy-
+  // free, gluten-free and soy-free profiles.
+  const proteinCandidate = fit?.candidate || pumpCatalogProteinBoosters.find((entry) => entry.id === 'extra-pea-protein');
+  const proteinFit = fit?.fit || pumpCatalogFitProtein(recipe, requestedCalories, requestedProtein, proteinCandidate);
+  if (!proteinFit) throw new Error(`PUMP could not fit ${recipe.id} into its calorie and protein budget.`);
+
+  const initialProteinNeeded = Math.max(0, requestedProtein - proteinFit.baseProtein);
+  const energy = pumpCatalogEnergyPlan(
+    recipe,
+    preferences,
+    slot,
+    requestedCalories - proteinFit.baseCalories - proteinFit.proteinCalories,
+    initialProteinNeeded,
+    proteinCandidate,
+  );
+  // Nutrition labels and household portions are estimates. A residual under five
+  // calories is kept inside the menu's rounded target instead of showing nonsense
+  // such as "1 gram avocado" to the user.
+  if (energy.remainingEffectiveCalories > 5) throw new Error(`PUMP could not complete the energy budget for ${recipe.id}.`);
+  const finalProteinBoostGrams = energy.remainingProtein / proteinCandidate.proteinPerGram;
+
+  const detail = [
+    `כמות מוצעת: ${recipe.ingredients.map((ingredient) => pumpCatalogAmount(ingredient, proteinFit.scale)).join(' · ')}`,
+    finalProteinBoostGrams > 0.01 ? `להשלמת החלבון: ${pumpCatalogFormatBoost(proteinCandidate, finalProteinBoostGrams)}` : '',
+    energy.extras.length ? `להשלמת יעד האנרגיה: ${energy.extras.map((entry) => pumpCatalogFormatBoost(entry, entry.grams)).join(' · ')}` : '',
+  ].filter(Boolean).join(' · ');
+
+  const proteinGrams = requestedProtein;
   return {
     ...recipe,
-    calories,
+    calories: requestedCalories,
     proteinGrams,
     protein: `כ־${proteinGrams} גרם חלבון`,
-    detail: `כמות מוצעת: ${recipe.ingredients.map((ingredient) => pumpCatalogAmount(ingredient, scale)).join(' · ')}`,
-    feedback,
+    detail,
+    feedback: pumpCatalogFeedback(profile, recipe.id),
+    plannedBoosters: {
+      baseScale: proteinFit.scale,
+      protein: finalProteinBoostGrams > 0.01 ? { id: proteinCandidate.id, grams: finalProteinBoostGrams } : null,
+      energy: energy.extras.map((entry) => ({ id: entry.id, grams: entry.grams })),
+    },
   };
 }
 
-function pumpCatalogOptions(slot, profile, targetCalories, date, usedSources, rotationKey = slot) {
+function pumpCatalogOptions(slot, profile, targetCalories, targetProtein, date, usedSources, rotationKey = slot) {
   const preferences = pumpCatalogPreferences(profile);
   const permitted = pumpMealCatalog.filter((recipe) => recipe.slots.includes(slot) && pumpCatalogAllowed(recipe, preferences, profile, date));
   const favorites = permitted.filter((recipe) => preferences.favorites.some((tag) => pumpHasTag(recipe, tag)));
@@ -228,31 +399,72 @@ function pumpCatalogOptions(slot, profile, targetCalories, date, usedSources, ro
   const first = ordered.find((recipe) => !usedSources?.has(pumpCatalogSource(recipe))) || ordered[0];
   if (usedSources && first) usedSources.add(pumpCatalogSource(first));
   const selected = [first, ...ordered.filter((recipe) => recipe.id !== first?.id)].slice(0, 3);
-  return selected.map((recipe) => pumpCatalogScale(recipe, targetCalories, profile));
+  return selected.map((recipe) => pumpCatalogScale(recipe, targetCalories, targetProtein, profile, slot));
 }
 
-function pumpCatalogPersonalizedMenu(profile, targets, date) {
-  const preferences = pumpCatalogPreferences(profile);
+function pumpCatalogSplit(total, shares) {
+  const safeTotal = Math.max(0, Math.round(Number(total) || 0));
+  const sum = shares.reduce((value, share) => value + share, 0) || 1;
+  const raw = shares.map((share) => safeTotal * share / sum);
+  const values = raw.map((value) => Math.floor(value));
+  let remainder = safeTotal - values.reduce((value, item) => value + item, 0);
+  const order = raw.map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((left, right) => right.fraction - left.fraction || left.index - right.index);
+  for (let index = 0; index < remainder; index += 1) values[order[index % order.length].index] += 1;
+  return values;
+}
+
+function pumpCatalogMainSlots(profile) {
   const isGain = profile.goal === 'gain' || profile.goal === 'event' && profile.targetWeight > profile.startWeight;
-  const mealCount = profile.mealPattern === 'two' ? 2 : 3;
-  const totalCalories = Number(targets?.calories) || 1500;
-  const slots = mealCount === 2
+  return profile.mealPattern === 'two'
     ? [
-      { slot: 'breakfast', timing: 'בוקר', share: 0.44, label: isGain ? 'פתיחה שמקדמת את יעד האנרגיה' : 'פתיחה משביעה ליום יציב' },
-      { slot: 'lunch', timing: 'ארוחה עיקרית', share: 0.56, label: 'ארוחה עיקרית שנבנתה לפי ההעדפות שלך' },
+      { slot: 'breakfast', timing: 'בוקר', label: isGain ? 'פתיחה שמקדמת את יעד האנרגיה' : 'פתיחה משביעה ליום יציב' },
+      { slot: 'lunch', timing: 'ארוחה עיקרית', label: 'ארוחה עיקרית שנבנתה לפי ההעדפות שלך' },
     ]
     : [
-      { slot: 'breakfast', timing: 'בוקר', share: 0.27, label: isGain ? 'פתיחה שמקדמת את יעד האנרגיה' : 'פתיחה משביעה ליום יציב' },
-      { slot: 'lunch', timing: 'צהריים', share: 0.40, label: 'הארוחה העיקרית לפי ההעדפות שלך' },
-      { slot: 'dinner', timing: 'ערב', share: 0.33, label: 'סוגרים את היום בלי להסתבך' },
+      { slot: 'breakfast', timing: 'בוקר', label: isGain ? 'פתיחה שמקדמת את יעד האנרגיה' : 'פתיחה משביעה ליום יציב' },
+      { slot: 'lunch', timing: 'צהריים', label: 'הארוחה העיקרית לפי ההעדפות שלך' },
+      { slot: 'dinner', timing: 'ערב', label: 'סוגרים את היום בלי להסתבך' },
     ];
-  const usedSources = new Set();
-  const meals = slots.map((slot, index) => {
-    const remainingShares = slots.slice(index).reduce((sum, item) => sum + item.share, 0);
-    const previousCalories = slots.slice(0, index).reduce((sum, item) => sum + Math.round(totalCalories * item.share / 10) * 10, 0);
-    const calories = index === slots.length - 1 ? Math.max(100, totalCalories - previousCalories) : Math.round(totalCalories * slot.share / 10) * 10;
-    return { ...slot, options: pumpCatalogOptions(slot.slot, profile, calories, date, usedSources), remainingShares };
-  });
+}
+
+function pumpCatalogSnackSlots(count) {
+  return Array.from({ length: count }, (_, index) => ({
+    slot: 'snack',
+    timing: `ארוחת ביניים ${index + 1}`,
+    label: index === 0 ? 'שומרים על שובע בין הארוחות' : index === 1 ? 'סוגרים את הפער עד לארוחה הבאה' : 'תוספת קטנה שמפזרת את יעד האנרגיה בנוחות',
+  }));
+}
+
+function pumpCatalogDefaultSnackCount(profile, requested) {
+  const parsed = Number(requested);
+  if (Number.isFinite(parsed) && parsed > 0) return Math.min(3, Math.floor(parsed));
+  return profile.mealPattern === 'two' || profile.mealPattern === 'flexible' || profile.goal === 'gain' ? 2 : 1;
+}
+
+function pumpCatalogComfortCapacity(mainCount, snackCount) {
+  const mainCapacity = mainCount === 2 ? 980 + 1050 : 760 + 980 + 880;
+  return mainCapacity + snackCount * 380;
+}
+
+function pumpCatalogResolvedSnackCount(profile, calories, requested) {
+  const mainCount = pumpCatalogMainSlots(profile).length;
+  let count = pumpCatalogDefaultSnackCount(profile, requested);
+  while (count < 3 && calories > pumpCatalogComfortCapacity(mainCount, count)) count += 1;
+  return count;
+}
+
+function pumpCatalogSlotShares(mainCount, snackCount) {
+  if (mainCount === 2 && snackCount === 1) return [0.42, 0.42, 0.16];
+  if (mainCount === 2 && snackCount === 2) return [0.33, 0.31, 0.17, 0.19];
+  if (mainCount === 2) return [0.28, 0.28, ...Array(snackCount).fill((1 - 0.56) / snackCount)];
+  if (snackCount === 1) return [0.25, 0.35, 0.27, 0.13];
+  if (snackCount === 2) return [0.21, 0.30, 0.24, 0.11, 0.14];
+  return [0.19, 0.27, 0.22, ...Array(snackCount).fill(0.32 / snackCount)];
+}
+
+function pumpCatalogChoiceLabels(profile, meals) {
+  const preferences = pumpCatalogPreferences(profile);
   const choices = [];
   if (preferences.foodStyle === 'vegan') choices.push('טבעוני');
   else if (preferences.foodStyle === 'vegetarian') choices.push('צמחוני');
@@ -261,18 +473,62 @@ function pumpCatalogPersonalizedMenu(profile, targets, date) {
   if (preferences.prep === 'quick') choices.push('מהיר להכנה');
   if (preferences.budget === 'budget') choices.push('חסכוני');
   const limited = meals.some((meal) => meal.options.length < 3);
+  return { choices, limited };
+}
+
+function pumpCatalogBuildMenu(profile, targets, date, slots, shares, requestedSnackCount = null) {
+  const totalCalories = Math.max(100, Math.round(Number(targets?.calories) || 1500));
+  const totalProtein = Math.max(1, Math.round(Number(targets?.protein) || totalCalories * 0.08));
+  const calories = pumpCatalogSplit(totalCalories, shares);
+  const protein = pumpCatalogSplit(totalProtein, shares);
+  const usedSources = new Set();
+  const meals = slots.map((slot, index) => ({
+    ...slot,
+    calories: calories[index],
+    protein: protein[index],
+    options: pumpCatalogOptions(slot.slot, profile, calories[index], protein[index], date, usedSources, `${slot.slot}-${index}`),
+  }));
+  const totals = meals.reduce((result, meal) => ({
+    calories: result.calories + meal.options[0].calories,
+    protein: result.protein + meal.options[0].proteinGrams,
+  }), { calories: 0, protein: 0 });
+  const { choices, limited } = pumpCatalogChoiceLabels(profile, meals);
+  const automaticSnack = requestedSnackCount !== null && slots.filter((slot) => slot.slot === 'snack').length > requestedSnackCount;
+  const context = [
+    automaticSnack ? 'נוספה ארוחת ביניים כדי לפזר את היעד בלי להעמיס על ארוחה אחת' : '',
+    choices.join(' · '),
+  ].filter(Boolean).join(' · ');
   return {
     ...Ma(profile, targets),
     meals,
-    note: `PUMP 2.1: הכמויות הן נקודת פתיחה לפי היעד שלך, והאפשרויות מתחלפות מיום ליום${choices.length ? ` · ${choices.join(' · ')}` : ''}. ${limited ? 'נשארו מעט חלופות בגלל ההגבלות שסימנת — חשוב לבדוק רכיבים בפועל.' : 'אפשר להחליף בין חלופות עם ערכים דומים.'}`,
+    guarantee: { calories: totals.calories, protein: totals.protein, requestedCalories: totalCalories, requestedProtein: totalProtein },
+    note: `כל חלופה בתפריט הזה בנויה כך שסך היום יגיע לכ־${totalCalories.toLocaleString()} קל׳ ולכ־${totalProtein} גרם חלבון — בלי לחשב לבד.${context ? ` ${context}.` : ''} ${limited ? 'נשארו מעט חלופות בגלל ההגבלות שסימנת — חשוב לבדוק רכיבים בפועל.' : 'אפשר להחליף בין החלופות בלי לשבור את יעד היום.'}`,
   };
 }
 
-function pumpCatalogPersonalizedSnacks(profile, snackCalories, date) {
-  const calories = Array.isArray(snackCalories) ? snackCalories : [180, 220];
+function pumpCatalogPersonalizedMenu(profile, targets, date) {
+  const slots = pumpCatalogMainSlots(profile);
+  const shares = slots.length === 2 ? [0.44, 0.56] : [0.27, 0.40, 0.33];
+  return pumpCatalogBuildMenu(profile, targets, date, slots, shares);
+}
+
+function pumpCatalogPersonalizedSnacks(profile, snackBudgets, date) {
+  const rawBudgets = Array.isArray(snackBudgets) ? snackBudgets : [180, 220];
+  const slots = pumpCatalogSnackSlots(rawBudgets.length || 2);
   const usedSources = new Set();
-  return [
-    { timing: 'ארוחת ביניים 1', label: 'שומרים על שובע בין הארוחות', options: pumpCatalogOptions('snack', profile, calories[0], date, usedSources, 'snack-1') },
-    { timing: 'ארוחת ביניים 2', label: 'סוגרים את הפער עד לארוחה הבאה', options: pumpCatalogOptions('snack', profile, calories[1], date, usedSources, 'snack-2') },
-  ];
+  return slots.map((slot, index) => {
+    const budget = rawBudgets[index];
+    const calories = Math.max(100, Math.round(Number(typeof budget === 'object' ? budget.calories : budget) || 180));
+    const protein = Math.max(8, Math.round(Number(typeof budget === 'object' ? budget.protein : 0) || calories * 0.08));
+    return { ...slot, calories, protein, options: pumpCatalogOptions('snack', profile, calories, protein, date, usedSources, `snack-${index + 1}`) };
+  });
+}
+
+function pumpCatalogDailyMenu(profile, targets, date, requestedSnackCount) {
+  const totalCalories = Math.max(100, Math.round(Number(targets?.calories) || 1500));
+  const mainSlots = pumpCatalogMainSlots(profile);
+  const configuredSnackCount = pumpCatalogDefaultSnackCount(profile, requestedSnackCount);
+  const snackCount = pumpCatalogResolvedSnackCount(profile, totalCalories, requestedSnackCount);
+  const slots = [...mainSlots, ...pumpCatalogSnackSlots(snackCount)];
+  return pumpCatalogBuildMenu(profile, targets, date, slots, pumpCatalogSlotShares(mainSlots.length, snackCount), configuredSnackCount);
 }
