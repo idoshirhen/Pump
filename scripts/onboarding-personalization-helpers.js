@@ -11,6 +11,8 @@ function pumpOnboardingPreferences(profile) {
     foodStyle: preferences.foodStyle || 'regular',
     avoid: pumpPreferenceList(preferences.avoid),
     proteins: pumpPreferenceList(preferences.proteins),
+    favorites: pumpPreferenceList(preferences.favorites),
+    dislikes: pumpPreferenceList(preferences.dislikes),
     prep: preferences.prep || 'quick',
     budget: preferences.budget || 'regular',
     equipment: selectedEquipment.length ? selectedEquipment : defaultEquipment,
@@ -80,6 +82,45 @@ function pumpOnboardingMulti(profile, setProfile, field, options) {
   });
 }
 
+function pumpOnboardingTasteToggle(profile, setProfile, field, value) {
+  const oppositeField = field === 'favorites' ? 'dislikes' : 'favorites';
+  setProfile((currentProfile) => {
+    const preferences = pumpOnboardingPreferences(currentProfile);
+    const current = pumpPreferenceList(preferences[field]);
+    const next = current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value];
+    return {
+      ...currentProfile,
+      personalization: {
+        ...preferences,
+        [field]: next,
+        [oppositeField]: pumpPreferenceList(preferences[oppositeField]).filter((item) => item !== value),
+      },
+    };
+  });
+}
+
+function pumpOnboardingTaste(profile, setProfile, field, options) {
+  const selectedValues = pumpPreferenceList(pumpOnboardingPreferences(profile)[field]);
+  return (0, V.jsx)('div', {
+    className: 'select-grid taste-grid',
+    children: options.map(([value, title, detail]) => {
+      const selected = selectedValues.includes(value);
+      return (0, V.jsxs)('button', {
+        type: 'button',
+        className: selected ? 'select-card selected' : 'select-card',
+        onClick: () => pumpOnboardingTasteToggle(profile, setProfile, field, value),
+        children: [
+          (0, V.jsx)('span', { children: selected ? '✓' : '+' }),
+          (0, V.jsx)('b', { children: title }),
+          (0, V.jsx)('small', { children: detail }),
+        ],
+      }, value);
+    }),
+  });
+}
+
 function pumpOnboardingFoodStep(profile, setProfile) {
   return (0, V.jsxs)(V.Fragment, {
     children: [
@@ -114,6 +155,34 @@ function pumpOnboardingFoodStep(profile, setProfile) {
         ['dairy', 'מוצרי חלב', 'סקיר, יוגורט וקוטג׳'],
         ['eggs', 'ביצים', 'פשוט לבית'],
         ['plant', 'חלבון צמחי', 'קטניות ואבקות צמחיות'],
+      ]),
+      (0, V.jsx)('p', { className: 'label-line spaced', children: 'מה הכי כיף לך לאכול?' }),
+      (0, V.jsx)('p', { className: 'weekend-eating-note', children: 'הבחירה מדרגת את המנות — היא לא הופכת אותן לחובה.' }),
+      pumpOnboardingTaste(profile, setProfile, 'favorites', [
+        ['chicken', 'עוף', 'עוף, הודו וארוחות חלבון'],
+        ['tuna', 'טונה', 'כריכים, סלטים ופסטה'],
+        ['eggs', 'ביצים', 'חביתה, שקשוקה וטוסטים'],
+        ['dairy', 'יוגורט וקוטג׳', 'בוקר וביניים מהירים'],
+        ['rice', 'אורז וקינואה', 'קערות וארוחות מוכנות'],
+        ['pasta', 'פסטה', 'ארוחה פשוטה ומוכרת'],
+        ['tahini', 'טחינה', 'תוספת ים־תיכונית'],
+        ['potato', 'תפוחי אדמה', 'אפוי, מבושל או בתבנית'],
+        ['legumes', 'קטניות', 'חומוס, עדשים ושעועית'],
+        ['fruit', 'פירות', 'בוקר וביניים מתוקים'],
+      ]),
+      (0, V.jsx)('p', { className: 'label-line spaced', children: 'מה לא בא לך לקבל בתפריט?' }),
+      (0, V.jsx)('p', { className: 'weekend-eating-note', children: 'זה שונה מאלרגיה או הימנעות רפואית — כאן פשוט לא נציע את הדברים האלה.' }),
+      pumpOnboardingTaste(profile, setProfile, 'dislikes', [
+        ['chicken', 'עוף', 'לא יופיע כברירת מחדל'],
+        ['tuna', 'טונה', 'לא יופיע כברירת מחדל'],
+        ['eggs', 'ביצים', 'לא יופיע כברירת מחדל'],
+        ['dairy', 'יוגורט וקוטג׳', 'לא יופיע כברירת מחדל'],
+        ['rice', 'אורז וקינואה', 'לא יופיע כברירת מחדל'],
+        ['pasta', 'פסטה', 'לא יופיע כברירת מחדל'],
+        ['tahini', 'טחינה', 'לא יופיע כברירת מחדל'],
+        ['potato', 'תפוחי אדמה', 'לא יופיע כברירת מחדל'],
+        ['legumes', 'קטניות', 'לא יופיע כברירת מחדל'],
+        ['fruit', 'פירות', 'לא יופיע כברירת מחדל'],
       ]),
       (0, V.jsx)('p', { className: 'label-line spaced', children: 'כמה זמן יש להכנה בדרך כלל?' }),
       pumpOnboardingSingle(profile, setProfile, 'prep', [

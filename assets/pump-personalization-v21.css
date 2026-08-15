@@ -1,0 +1,45 @@
+.taste-grid {
+  margin-top: 9px;
+}
+
+.meal-feedback {
+  border-top: 1px solid #ffffff14;
+  margin-top: 13px;
+  padding-top: 11px;
+}
+
+.meal-feedback > small {
+  color: #a8a8ad;
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.meal-feedback > div {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+.meal-feedback button {
+  background: #1c1c1f;
+  border: 1px solid #ffffff1b;
+  border-radius: 9px;
+  color: #c9c9ce;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  min-height: 34px;
+  padding: 5px 4px;
+}
+
+.meal-feedback button.active {
+  background: #8ceab0;
+  border-color: #8ceab0;
+  color: #112519;
+}
+
+.meal-feedback button:hover {
+  border-color: #ff9c57;
+}

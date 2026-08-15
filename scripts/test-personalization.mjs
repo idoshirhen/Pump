@@ -6,6 +6,8 @@ import { pathToFileURL } from 'node:url';
 const moduleRoot = process.env.PUMP_TEST_NODE_MODULES || '/tmp/pump-personalization-test-deps/node_modules';
 const { JSDOM } = await import(pathToFileURL(join(moduleRoot, 'jsdom/lib/api.js')).href);
 const bundle = await readFile(new URL('../assets/index-personalized-v2.js', import.meta.url), 'utf8');
+assert.match(bundle, /w\.age<18/, 'automatic calorie planning is guarded for minors');
+assert.match(bundle, /w\.needsMedicalClearance/, 'automatic calorie planning is guarded for medical-clearance cases');
 const wait = (milliseconds = 20) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 async function waitFor(check, label) {
@@ -28,6 +30,7 @@ function response(data, status = 200) {
 
 const foods = [];
 const actions = [];
+const mealFeedback = [];
 let personalization = null;
 let profileSaveCount = 0;
 let personalizationSaveCount = 0;
@@ -70,6 +73,15 @@ window.fetch = async (input, init = {}) => {
     }
     const row = personalization ? { user_id: 'user-1', preferences: personalization } : null;
     return response(objectResponse ? row : row ? [row] : []);
+  }
+  if (url.pathname.endsWith('/rest/v1/user_meal_feedback')) {
+    if (method === 'POST') {
+      const row = Array.isArray(JSON.parse(init.body)) ? JSON.parse(init.body)[0] : JSON.parse(init.body);
+      const old = mealFeedback.findIndex((item) => item.recipe_id === row.recipe_id);
+      if (old >= 0) mealFeedback.splice(old, 1, row); else mealFeedback.push(row);
+      return response([row], 201);
+    }
+    return response(mealFeedback);
   }
   if (url.pathname.endsWith('/rest/v1/weight_entries')) return response([]);
   if (url.pathname.endsWith('/rest/v1/checkins')) return response([]);
@@ -152,6 +164,7 @@ clickOnboardingChoice('טבעוני/ת');
 clickOnboardingChoice('גלוטן');
 clickOnboardingChoice('סויה / טופו');
 clickOnboardingChoice('חלבון צמחי');
+clickOnboardingChoice('טחינה');
 await next(7);
 
 clickOnboardingChoice('משקולות יד');
@@ -171,6 +184,7 @@ assert.deepEqual(personalization.avoid.sort(), ['gluten', 'soy']);
 assert.equal(personalization.equipment.includes('dumbbells'), true);
 assert.equal(personalization.trainingFocus, 'upper');
 assert.equal(personalization.sessionMinutes, '20');
+assert.equal(personalization.favorites.includes('tahini'), true);
 assert.equal(window.document.querySelector('.pump-personalization-card'), null, 'home stays free of a personalization card');
 
 const foodTab = [...window.document.querySelectorAll('.bottom-nav button')].find((button) => button.textContent.includes('תזונה'));
@@ -187,6 +201,14 @@ await waitFor(() => [...window.document.querySelectorAll('.menu-list > article')
 assert.equal(foods.length, 1);
 assert.equal(foods[0].menu_key, 'menu-3');
 assert.equal(window.document.querySelector('.logged-food').textContent.includes(foods[0].name), true);
+snackCard = [...window.document.querySelectorAll('.menu-list > article')][3];
+assert.ok(snackCard.querySelector('.meal-feedback'), 'a completed snack has the same feedback controls as every meal');
+const likedButton = [...snackCard.querySelectorAll('.meal-feedback button')].find((button) => button.textContent.includes('אהבתי'));
+assert.ok(likedButton, 'meal feedback includes a like action');
+likedButton.click();
+await waitFor(() => mealFeedback.length === 1, 'meal feedback persistence');
+await waitFor(() => [...window.document.querySelectorAll('.menu-list > article')][3].querySelector('.meal-feedback button.active'), 'meal feedback UI update');
+assert.equal(mealFeedback[0].feedback, 'liked');
 snackCard = [...window.document.querySelectorAll('.menu-list > article')][3];
 snackCard.querySelector('.meal-toggle.done').click();
 await waitFor(() => foods.length === 0, 'native snack cancellation');
