@@ -1,0 +1,49 @@
+/* PUMP mobile/web compatibility fixes */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+#root {
+  width: 100%;
+  min-height: 100dvh;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* The app used full-screen containers with overflow hidden. On shorter Android
+   screens that clipped the bottom of onboarding/pages. Let document scrolling
+   handle the vertical flow while keeping fixed navigation untouched. */
+#root > div {
+  min-height: 100dvh;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.screen,
+.welcome,
+.onboarding,
+.page,
+.main,
+.content,
+.app-content {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+/* Preserve enough room above Android/iOS safe areas and fixed bottom nav. */
+#root {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
