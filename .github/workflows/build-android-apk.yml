@@ -1,0 +1,39 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'assets/**'
+      - 'index.html'
+      - 'scripts/sync-android-assets.mjs'
+      - '.github/workflows/build-android-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.10.2'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android build tools
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Package the PUMP web interface
+        run: node scripts/sync-android-assets.mjs
+      - name: Build installable test APK
+        run: gradle -p android assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PUMP-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
