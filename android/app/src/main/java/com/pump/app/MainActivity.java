@@ -35,8 +35,13 @@ public final class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(17, 17, 17));
 
+        WebViewAssetLoader.AssetsPathHandler assetsPathHandler =
+                new WebViewAssetLoader.AssetsPathHandler(this);
         WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
-                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/assets/", assetsPathHandler)
+                // The web bundle is built for GitHub Pages under /Pump/. Keep
+                // those absolute asset URLs working inside the packaged APK too.
+                .addPathHandler("/Pump/", assetsPathHandler)
                 .build();
 
         webView.getSettings().setJavaScriptEnabled(true);
