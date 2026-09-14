@@ -83,12 +83,13 @@ body { -webkit-overflow-scrolling: touch; }
   text-align: right;
 }
 
-/* Nutrition tab only: keep the fixed LTR numbers, but place the Hebrew unit after them. */
+/* Nutrition tab only: numbers stay LTR; units come after them in RTL reading order. */
 .nutrition-target > div:not(.nutrition-target-actions) > b > em {
   display: none;
 }
 .nutrition-target > div:not(.nutrition-target-actions):nth-child(1) > b::after {
   content: "קל׳";
+  order: -1;
   direction: rtl;
   unicode-bidi: isolate;
   font-style: normal;
@@ -96,6 +97,7 @@ body { -webkit-overflow-scrolling: touch; }
 }
 .nutrition-target > div:not(.nutrition-target-actions):nth-child(2) > b::after {
   content: "גרם";
+  order: -1;
   direction: rtl;
   unicode-bidi: isolate;
   font-style: normal;
