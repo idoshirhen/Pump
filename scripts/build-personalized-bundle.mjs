@@ -203,7 +203,7 @@ replaceOnce(
 );
 replaceOnce(
   '},[M]);let Pe=(0,l.useMemo)(()=>u?pumpPersonalizedTargets(u):null,[u])',
-  '},[M]),(0,l.useEffect)(()=>{window.scrollTo(0,0),document.documentElement.scrollTo(0,0),document.body.scrollTo(0,0)},[b,oe]);let Pe=(0,l.useMemo)(()=>u?pumpPersonalizedTargets(u):null,[u])',
+  '},[M]),(0,l.useEffect)(()=>{let e=()=>{window.scrollTo(0,0),document.documentElement.scrollTo(0,0),document.body.scrollTo(0,0),document.querySelectorAll(`.onboarding,.app`).forEach(e=>e.scrollTo(0,0))};e(),requestAnimationFrame(e)},[b,oe]);let Pe=(0,l.useMemo)(()=>u?pumpPersonalizedTargets(u):null,[u])',
   'reset scroll on navigation',
 );
 replaceOnce(
