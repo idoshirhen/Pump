@@ -130,7 +130,41 @@ body { -webkit-overflow-scrolling: touch; }
 .workout-complete { color:#121212; background:#ff6b00; border:0; border-radius:13px; width:100%; margin-top:13px; padding:13px; font-weight:900; }
 .workout-complete.done { color:#bdeecb; background:#173f2b; border:1px solid #3f8a62; }
 
+/* Exercise animation previews */
+.workout-card .exercise-list article.has-exercise-demo {
+  display: grid;
+  grid-template-columns: 86px 32px minmax(0,1fr);
+  align-items: start;
+  column-gap: 10px;
+}
+.workout-card .exercise-list article.has-exercise-demo > .exercise-demo {
+  grid-column: 1;
+  grid-row: 1;
+}
+.workout-card .exercise-list article.has-exercise-demo > span {
+  grid-column: 2;
+  grid-row: 1;
+}
+.workout-card .exercise-list article.has-exercise-demo > div {
+  grid-column: 3;
+  grid-row: 1;
+}
+.exercise-demo {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 14px;
+  border: 1px solid #343439;
+  background: #111;
+}
+
 @media (max-width: 510px) {
   .onboarding { padding-left: 18px; padding-right: 18px; }
   .onboard-footer { padding-left: 18px; padding-right: 18px; }
+  .workout-card .exercise-list article.has-exercise-demo {
+    grid-template-columns: 74px 28px minmax(0,1fr);
+    column-gap: 8px;
+  }
+  .exercise-demo { width:74px; height:74px; border-radius:12px; }
 }
