@@ -66,7 +66,7 @@ body { -webkit-overflow-scrolling: touch; }
 }
 .metrics > span {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   direction: ltr;
   unicode-bidi: isolate;
   justify-content: flex-end;
@@ -79,10 +79,12 @@ body { -webkit-overflow-scrolling: touch; }
   unicode-bidi: isolate;
 }
 .metrics > span > small {
+  display: inline;
   direction: rtl;
   unicode-bidi: isolate;
-  flex-basis: 100%;
+  flex-basis: auto;
   text-align: right;
+  white-space: nowrap;
 }
 
 /* Nutrition tab only: numbers stay LTR; units come after them in RTL reading order. */
