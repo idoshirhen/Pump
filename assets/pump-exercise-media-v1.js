@@ -1,27 +1,5 @@
 (() => {
-  const BASE = '/Pump/assets/exercises/';
-
-  const media = {
-    squat: 'squat.webp',
-    'leg-press': 'leg-press.webp',
-    'glute-bridge': 'glute-bridge.webp',
-    'push-up': 'push-up.webp',
-    'incline-push-up': 'incline-push-up.webp',
-    'dumbbell-floor-press': 'dumbbell-floor-press.webp',
-    'chest-press-machine': 'chest-press-machine.webp',
-    'bench-dips': 'bench-dips.webp',
-    'one-arm-dumbbell-row': 'one-arm-dumbbell-row.webp',
-    'resistance-band-row': 'resistance-band-row.webp',
-    'seated-cable-row': 'seated-cable-row.webp',
-    'lat-pulldown': 'lat-pulldown.webp',
-    'dumbbell-shoulder-press': 'dumbbell-shoulder-press.webp',
-    'dumbbell-lateral-raise': 'dumbbell-lateral-raise.webp',
-    'dumbbell-biceps-curl': 'dumbbell-biceps-curl.webp',
-    'hammer-curl': 'hammer-curl.webp',
-    'overhead-triceps-extension': 'overhead-triceps-extension.webp',
-    plank: 'plank.webp',
-    'dead-bug': 'dead-bug.webp'
-  };
+  const media = window.PUMP_EXERCISE_DATA || {};
 
   const exactNameMap = new Map([
     ['Squat', 'squat'], ['סקוואט', 'squat'], ['רגליים', 'squat'],
@@ -53,23 +31,13 @@
       if (body.includes('מלמעלה') || body.includes('גב העליון')) return 'lat-pulldown';
       return 'one-arm-dumbbell-row';
     }
-
-    if (title === 'בטן') {
-      if (body.includes('לכל צד')) return 'dead-bug';
-      return 'plank';
-    }
-
+    if (title === 'בטן') return body.includes('לכל צד') ? 'dead-bug' : 'plank';
     if (title === 'חזה וידיים') {
       if (body.includes('מכונה')) return 'chest-press-machine';
       if (body.includes('שולחן') || body.includes('ספה')) return 'incline-push-up';
       return 'push-up';
     }
-
-    if (title === 'רגליים') {
-      if (body.includes('מכונה')) return 'leg-press';
-      return 'squat';
-    }
-
+    if (title === 'רגליים') return body.includes('מכונה') ? 'leg-press' : 'squat';
     return exactNameMap.get(title) || null;
   }
 
@@ -77,21 +45,25 @@
     document.querySelectorAll('.workout-card .exercise-list article').forEach(article => {
       if (article.dataset.exerciseMediaReady === '1') return;
       const slug = resolveSlug(article);
-      if (!slug || !media[slug]) return;
+      const src = media[slug];
+      if (!slug || !src) return;
 
       const img = document.createElement('img');
       img.className = 'exercise-demo';
       img.alt = 'הדגמת תרגיל';
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.src = BASE + media[slug];
+      img.src = src;
       img.dataset.exerciseSlug = slug;
       img.style.display = 'none';
       img.addEventListener('load', () => {
         img.style.display = 'block';
         article.classList.add('has-exercise-demo');
       }, { once: true });
-      img.addEventListener('error', () => img.remove(), { once: true });
+      img.addEventListener('error', () => {
+        article.dataset.exerciseMediaReady = '0';
+        img.remove();
+      }, { once: true });
 
       article.insertBefore(img, article.firstChild);
       article.dataset.exerciseMediaReady = '1';
@@ -112,5 +84,5 @@
   document.addEventListener('DOMContentLoaded', decorate);
   decorate();
 
-  window.PUMP_EXERCISE_MEDIA = { media, exactNameMap, refresh: decorate };
+  window.PUMP_EXERCISE_MEDIA = { media, exactNameMap, refresh: decorate, resolveSlug };
 })();
