@@ -48,19 +48,39 @@ body { -webkit-overflow-scrolling: touch; }
 .nutrition-target-actions button { min-height:42px; color:#111; background:#ff6b00; border:1px solid #ff6b00; border-radius:14px; font-size:11px; font-weight:900; }
 .food-actions { justify-content:flex-end; }
 
-/* Keep numeric progress values in the natural Israeli LTR order inside the RTL UI. */
+/* RTL layout stays right-aligned; only the numeric run itself is LTR. */
+.nutrition-target > div:not(.nutrition-target-actions),
+.daily-head > div,
+.metrics > span {
+  direction: rtl;
+  text-align: right;
+}
 .nutrition-target b,
 .daily-head b {
-  direction:ltr;
-  unicode-bidi:isolate;
+  display: flex;
+  direction: ltr;
+  unicode-bidi: isolate;
+  justify-content: flex-end;
+  align-items: baseline;
+  text-align: right;
+  gap: 4px;
 }
 .metrics > span {
-  direction:ltr;
-  unicode-bidi:isolate;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: baseline;
+  column-gap: 3px;
+}
+.metrics > span > b {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 .metrics > span > small {
-  direction:rtl;
-  unicode-bidi:isolate;
+  direction: rtl;
+  unicode-bidi: isolate;
+  flex-basis: 100%;
+  text-align: right;
 }
 
 .workout-complete { color:#121212; background:#ff6b00; border:0; border-radius:13px; width:100%; margin-top:13px; padding:13px; font-weight:900; }
