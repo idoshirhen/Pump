@@ -128,6 +128,143 @@ replaceOnce(
   'meal feedback controls',
 );
 
+replaceOnce(
+  'function ja(e){let g=e.goal===`gain`||e.goal===`event`&&e.targetWeight>e.startWeight,t=10*e.startWeight+6.25*e.height-5*e.age+(e.sex===`male`?5:-161),n={low:1.2,light:1.375,medium:1.55}[e.activity],r=g?e.pace===`steady`?250:350:e.pace===`steady`?-350:-500,i=Math.max(1200,Math.round((t*n+r)/50)*50),a=g&&e.trainingLevel===`experienced`?1.8:1.6,o=g?e.pace===`steady`?`כ־0.2 ק״ג בשבוע`:`כ־0.3 ק״ג בשבוע`:e.pace===`steady`?`כ־0.25 ק״ג בשבוע`:`כ־0.5 ק״ג בשבוע`,s=e.goal===`event`?`הכנה לאירוע`:g?`עלייה במשקל`:`ירידה במשקל`,c=e.trainingDays===0?`מתחילים מתנועה יומיומית קלה`:`${e.trainingDays} אימונים בשבוע, ${e.trainingPlace===`gym`?`בחדר כושר`:e.trainingPlace===`home`?`בבית`:`בבית ובחדר כושר`}`;return{calories:i,protein:Math.round(e.startWeight*a),weeklyChange:o,goalLabel:s,training:c}}',
+  'function ja(e){let g=e.goal===`gain`||e.goal===`event`&&e.targetWeight>e.startWeight,t=10*e.startWeight+6.25*e.height-5*e.age+(e.sex===`male`?5:-161),n={low:1.2,light:1.375,medium:1.55}[e.activity],r=g?e.pace===`steady`?250:350:e.pace===`steady`?-350:-500,i=Math.max(1200,Math.round((t*n+r)/50)*50),a=g&&e.trainingLevel===`experienced`?1.8:1.6,o=g?e.pace===`steady`?`כ־0.2 ק״ג בשבוע`:`כ־0.3 ק״ג בשבוע`:e.pace===`steady`?`כ־0.25 ק״ג בשבוע`:`כ־0.5 ק״ג בשבוע`,s=e.goal===`event`?`הכנה לאירוע`:g?`עלייה במשקל`:`ירידה במשקל`,c=e.trainingDays===0?`מתחילים מתנועה יומיומית קלה`:`${e.trainingDays} אימונים בשבוע, ${e.trainingPlace===`gym`?`בחדר כושר`:e.trainingPlace===`home`?`בבית`:`בבית ובחדר כושר`}`,l=Math.abs(Number(e.targetWeight)-Number(e.startWeight)),u=g?(e.pace===`steady`?[.15,.3]:[.25,.4]):(e.pace===`steady`?[.25,.45]:[.45,.65]),d=Math.max(1,Math.ceil(l/u[1]/4.345)),f=Math.max(d,Math.ceil(l/u[0]/4.345)),p=`כ־${d}${d===f?``:`–${f}`} ${f===1?`חודש`:`חודשים`}`;return{calories:i,protein:Math.round(e.startWeight*a),weeklyChange:o,goalLabel:s,training:c,goalEta:p}}',
+  'goal ETA',
+);
+
+replaceOnce(
+  'value:w.age,onChange:e=>T({...w,age:Number(e.target.value)})',
+  'value:w.age??``,onChange:e=>T({...w,age:e.target.value===``?null:Number(e.target.value)})',
+  'blank age input',
+);
+replaceOnce(
+  'value:w.height,onChange:e=>T({...w,height:Number(e.target.value)})',
+  'value:w.height??``,onChange:e=>T({...w,height:e.target.value===``?null:Number(e.target.value)})',
+  'blank height input',
+);
+replaceOnce(
+  'value:w.startWeight,onChange:e=>T({...w,startWeight:Number(e.target.value)})',
+  'value:w.startWeight??``,onChange:e=>T({...w,startWeight:e.target.value===``?null:Number(e.target.value)})',
+  'blank start weight input',
+);
+replaceOnce(
+  'value:w.targetWeight,onChange:e=>T({...w,targetWeight:Number(e.target.value)})',
+  'value:w.targetWeight??``,onChange:e=>T({...w,targetWeight:e.target.value===``?null:Number(e.target.value)})',
+  'blank target weight input',
+);
+replaceOnce(
+  'function Ge(){return oe===1&&(!w.name.trim()||w.age<18||w.height<100||w.startWeight<25)?',
+  'function Ge(){return oe===1&&(!w.name.trim()||!Number.isFinite(w.age)||!Number.isFinite(w.height)||!Number.isFinite(w.startWeight)||w.age<18||w.height<100||w.startWeight<25)?',
+  'blank numeric validation',
+);
+replaceOnce(
+  'oe===2&&(w.goal===`lose`&&w.targetWeight>=w.startWeight||w.goal===`gain`&&w.targetWeight<=w.startWeight||w.goal===`event`&&w.targetWeight===w.startWeight)?',
+  'oe===2&&(!Number.isFinite(w.targetWeight)||w.goal===`lose`&&w.targetWeight>=w.startWeight||w.goal===`gain`&&w.targetWeight<=w.startWeight||w.goal===`event`&&w.targetWeight===w.startWeight)?',
+  'blank target validation',
+);
+
+replaceOnce(
+  'catch(e){re(e instanceof Error?e.message:`משהו השתבש.`)}finally{ae(!1)}}}function Ge()',
+  'catch(e){let t=e instanceof Error?e.message:`משהו השתבש.`;re(/email not confirmed|email_not_confirmed/i.test(t)?`המייל עדיין לא אומת. פתח/י את קישור האימות שנשלח אליך ואז נסה/י שוב.`:t)}finally{ae(!1)}}}function Ge()',
+  'Hebrew email confirmation error',
+);
+
+replaceOnce(
+  '[ke,Ae]=(0,l.useState)({}),[je,j]=(0,l.useState)(``)',
+  '[ke,Ae]=(0,l.useState)({}),[WeDone,setWorkoutDone]=(0,l.useState)(null),[je,j]=(0,l.useState)(``)',
+  'workout completion state',
+);
+replaceOnce(
+  'let[i,a,o,s,l,personalRow,feedbackRows]=await Promise.all([',
+  'let[i,a,o,s,l,personalRow,feedbackRows,workoutRow]=await Promise.all([',
+  'workout completion query variables',
+);
+replaceOnce(
+  'e.from(`user_meal_feedback`).select(`recipe_id, feedback, updated_at`).eq(`user_id`,r.id)]);if(i.error||a.error||o.error||s.error||l.error||personalRow.error||feedbackRows.error)',
+  'e.from(`user_meal_feedback`).select(`recipe_id, feedback, updated_at`).eq(`user_id`,r.id),e.from(`workout_completions`).select(`date, workout_key, completed_at`).eq(`user_id`,r.id).eq(`date`,M).maybeSingle()]);if(i.error||a.error||o.error||s.error||l.error||personalRow.error||feedbackRows.error||workoutRow.error)',
+  'workout completion query',
+);
+replaceOnce(
+  'throw i.error??a.error??o.error??s.error??l.error??personalRow.error??feedbackRows.error;let u=i.data',
+  'throw i.error??a.error??o.error??s.error??l.error??personalRow.error??feedbackRows.error??workoutRow.error;let u=i.data',
+  'workout completion query error',
+);
+replaceOnce(
+  'y(l.data??null),f&&T(f)',
+  'y(l.data??null),setWorkoutDone(workoutRow.data??null),f&&T(f)',
+  'workout completion state mapping',
+);
+replaceOnce(
+  'h([]),_([]),D([]),le(0),Ae({}),e&&j(`יום חדש התחיל',
+  'h([]),_([]),D([]),le(0),Ae({}),setWorkoutDone(null),e&&j(`יום חדש התחיל',
+  'workout completion daily reset',
+);
+replaceOnce(
+  '},[M]);let Pe=(0,l.useMemo)(()=>u?pumpPersonalizedTargets(u):null,[u])',
+  '},[M]),(0,l.useEffect)(()=>{window.scrollTo(0,0),document.documentElement.scrollTo(0,0),document.body.scrollTo(0,0)},[b,oe]);let Pe=(0,l.useMemo)(()=>u?pumpPersonalizedTargets(u):null,[u])',
+  'reset scroll on navigation',
+);
+replaceOnce(
+  'async function Je(){if(s)try{let{error:t}=await e.from(`checkins`).upsert({user_id:s.id,date:M,mood:he},{onConflict:`user_id,date`});if(t)throw t;await Ne(),O(!1),j(`צ׳ק־אין נשמר. ממשיכים מחר.`)}catch(e){j(e instanceof Error?e.message:`לא הצלחנו לשמור.`)}}async function Ye',
+  'async function Je(){if(s)try{let{error:t}=await e.from(`checkins`).upsert({user_id:s.id,date:M,mood:he},{onConflict:`user_id,date`});if(t)throw t;await Ne(),O(!1),j(`צ׳ק־אין נשמר. ממשיכים מחר.`)}catch(e){j(e instanceof Error?e.message:`לא הצלחנו לשמור.`)}}async function markWorkoutDone(t){if(!s)return;try{let{error:n}=await e.from(`workout_completions`).upsert({user_id:s.id,date:M,workout_key:t,completed_at:new Date().toISOString()},{onConflict:`user_id,date`});if(n)throw n;await Ne(),j(`האימון סומן להיום. כל הכבוד על העקביות.`)}catch(e){j(e instanceof Error?e.message:`לא הצלחנו לשמור את האימון.`)}}async function Ye',
+  'workout completion persistence',
+);
+replaceOnce(
+  'Ve=v?.date===M,He=m.reduce((e,t)=>e+t.calories,0)',
+  'Ve=v?.date===M,workoutCompleted=WeDone?.date===M,He=m.reduce((e,t)=>e+t.calories,0)',
+  'workout completion status',
+);
+replaceOnce(
+  'ft=+(m.length>0)+ +!!E.includes(`train`)+ +!!Ve',
+  'ft=+(m.length>0)+ +!!workoutCompleted+ +!!Ve',
+  'workout completion score',
+);
+replaceOnce(
+  'let t=e.id===`checkin`?Ve:e.id===`meal`?m.length>0:E.includes(e.id);return',
+  'let t=e.id===`checkin`?Ve:e.id===`meal`?m.length>0:e.id===`train`?workoutCompleted:E.includes(e.id);return',
+  'workout completion task state',
+);
+replaceOnce(
+  '(e.id!==`meal`&&D(t?E.filter(t=>t!==e.id):[...E,e.id]),x(e.id===`meal`?`food`:`training`))',
+  '(e.id!==`meal`&&e.id!==`train`&&D(t?E.filter(t=>t!==e.id):[...E,e.id]),x(e.id===`meal`?`food`:`training`))',
+  'workout completion task click',
+);
+replaceOnce(
+  ']},e.label))]}),(0,V.jsxs)(`section`,{className:`training-tip`',
+  ']},e.label)),(0,V.jsx)(`button`,{className:workoutCompleted?`workout-complete done`:`workout-complete`,disabled:workoutCompleted,onClick:()=>void markWorkoutDone(`movement`),children:workoutCompleted?`✓ אימון סומן להיום`:`סיימתי אימון היום`})]}),(0,V.jsxs)(`section`,{className:`training-tip`',
+  'workout completion button',
+);
+
+replaceOnce(
+  'children:[He.toLocaleString(),` `,(0,V.jsx)(`em`,{children:`קל׳`})]}',
+  'children:[He.toLocaleString(),` / `,Pe?.calories,` `,(0,V.jsx)(`em`,{children:`קל׳`})]}',
+  'calorie target ratio',
+);
+replaceOnce(
+  '(0,V.jsxs)(`section`,{className:`nutrition-target`,children:[',
+  '(0,V.jsxs)(`section`,{className:He>Pe?.calories?`nutrition-target over-target`:`nutrition-target`,children:[',
+  'calorie over-target style',
+);
+replaceOnce(
+  ']}),(0,V.jsxs)(`div`,{className:`food-actions`,children:[',
+  ']}),He>Pe?.calories&&(0,V.jsxs)(`p`,{className:`calorie-overage`,children:[`חרגת היום בכ־${(He-Pe.calories).toLocaleString()} קל׳. זה לא מוחק את ההתקדמות — פשוט ממשיכים כרגיל בארוחה הבאה.`]}),(0,V.jsxs)(`div`,{className:`food-actions`,children:[',
+  'calorie over-target message',
+);
+
+replaceOnce(
+  'Pe?.goalLabel,` · `,Pe?.weeklyChange,` · `,Pe?.training',
+  'Pe?.goalLabel,` · `,Pe?.weeklyChange,` · צפי יעד: `,Pe?.goalEta',
+  'home goal ETA',
+);
+
+replaceOnce(
+  ']}),(0,V.jsxs)(`section`,{className:`section-title`,children:[(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`small`,{children:`להיום`})',
+  ']}),(0,V.jsxs)(`section`,{className:`home-goal-card`,children:[(0,V.jsxs)(`header`,{children:[(0,V.jsxs)(`div`,{children:[(0,V.jsx)(`small`,{children:`היעד שלך`}),(0,V.jsxs)(`h2`,{children:[Pe?.goalLabel,` · `,u.targetWeight,` ק״ג`]})]}),(0,V.jsxs)(`b`,{children:[Le.toFixed(1),` ק״ג נשארו`]})]}),(0,V.jsxs)(`div`,{className:`home-goal-stats`,children:[(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`small`,{children:`משקל נוכחי`}),(0,V.jsxs)(`b`,{children:[Fe,` ק״ג`]})]}),(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`small`,{children:`צפי יעד`}),(0,V.jsx)(`b`,{children:Pe?.goalEta})]}),(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`small`,{children:`אימון היום`}),(0,V.jsx)(`b`,{children:workoutCompleted?`בוצע ✓`:`טרם סומן`})]})]}),Be.length>0?(0,V.jsxs)(`svg`,{className:`home-weight-chart`,viewBox:`0 0 100 48`,preserveAspectRatio:`none`,role:`img`,"aria-label":`גרף שקילות`,children:[(0,V.jsx)(`polyline`,{points:Be.map(e=>`${e.x},${Math.max(6,Math.min(43,e.y*.58))}`).join(` `)}),Be.map(e=>(0,V.jsx)(`circle`,{cx:e.x,cy:Math.max(6,Math.min(43,e.y*.58)),r:`1.6`},e.date))]}):(0,V.jsx)(`p`,{className:`home-weight-empty`,children:`אחרי שתי שקילות יוצג כאן גרף המגמה שלך.`})]}),(0,V.jsxs)(`section`,{className:`section-title`,children:[(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`small`,{children:`להיום`})',
+  'home dashboard goal card',
+);
+
 // The source bundle is minified and contains one legacy trailing space. Keep the
 // generated artifact clean without altering any JavaScript tokens.
 await writeFile(outputPath, bundle.replace(/[ \t]+(?=\r?\n|$)/g, ''));
