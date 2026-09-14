@@ -243,6 +243,16 @@ replaceOnce(
   'calorie target ratio',
 );
 replaceOnce(
+  '(0,V.jsx)(`button`,{onClick:()=>Ee(!0),children:`+ הוספה ידנית`})',
+  '(0,V.jsxs)(`div`,{className:`nutrition-target-actions`,children:[(0,V.jsx)(`button`,{onClick:()=>Ee(!0),children:`+ הוספה ידנית`}),(0,V.jsx)(`button`,{onClick:()=>x(`camera`),children:`◉ צילום אוכל`})]})',
+  'camera button beside manual add',
+);
+replaceOnce(
+  '(0,V.jsxs)(`div`,{className:`food-actions`,children:[(0,V.jsx)(`button`,{onClick:()=>x(`camera`),children:`◉ צילום אוכל`}),(0,V.jsxs)(`span`,{children:[`נותרו היום: `,pt.toLocaleString(),` קל׳`]})]})',
+  '(0,V.jsxs)(`div`,{className:`food-actions`,children:[(0,V.jsxs)(`span`,{children:[`נותרו היום: `,pt.toLocaleString(),` קל׳`]})]})',
+  'remove standalone camera action',
+);
+replaceOnce(
   '(0,V.jsxs)(`section`,{className:`nutrition-target`,children:[',
   '(0,V.jsxs)(`section`,{className:He>Pe?.calories?`nutrition-target over-target`:`nutrition-target`,children:[',
   'calorie over-target style',
@@ -257,6 +267,16 @@ replaceOnce(
   'Pe?.goalLabel,` · `,Pe?.weeklyChange,` · `,Pe?.training',
   'Pe?.goalLabel,` · `,Pe?.weeklyChange,` · צפי יעד: `,Pe?.goalEta',
   'home goal ETA',
+);
+replaceOnce(
+  '(0,V.jsxs)(`div`,{className:`daily-head`,children:[(0,V.jsxs)(`div`,{children:[(0,V.jsx)(`small`,{children:`המסגרת שלך להיום`}),(0,V.jsxs)(`b`,{children:[Pe?.calories.toLocaleString(),` `,(0,V.jsx)(`em`,{children:`קלוריות`})]})]}),(0,V.jsxs)(`div`,{className:`goal-ring`,style:{"--progress":`${Math.min(100,Math.round(He/(Pe?.calories||1)*100))}%`},children:[(0,V.jsx)(`strong`,{children:He}),(0,V.jsx)(`small`,{children:`נאכלו`})]})]})',
+  '(0,V.jsxs)(`div`,{className:`daily-head`,children:[(0,V.jsxs)(`div`,{children:[(0,V.jsx)(`small`,{children:`נאכלו היום`}),(0,V.jsxs)(`b`,{children:[He.toLocaleString(),` / `,Pe?.calories,` `,(0,V.jsx)(`em`,{children:`קל׳`})]})]})]})',
+  'simplify home calorie display',
+);
+replaceOnce(
+  '(0,V.jsxs)(`div`,{className:`metrics`,children:[(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`b`,{children:Ue}),` / `,Pe?.protein,(0,V.jsx)(`small`,{children:`חלבון`})]}),(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`b`,{children:pt}),(0,V.jsx)(`small`,{children:`נותרו קל׳`})]}),(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`b`,{children:ce}),` / 8`,(0,V.jsx)(`small`,{children:`כוסות מים`})]})]})',
+  '(0,V.jsxs)(`div`,{className:`metrics`,children:[(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`b`,{children:Ue}),` / `,Pe?.protein,(0,V.jsx)(`small`,{children:`חלבון`})]}),(0,V.jsxs)(`span`,{children:[(0,V.jsx)(`b`,{children:ce}),` / 8`,(0,V.jsx)(`small`,{children:`כוסות מים`})]})]})',
+  'remove scattered home calorie remainder',
 );
 
 replaceOnce(
