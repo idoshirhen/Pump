@@ -86,6 +86,9 @@ body { -webkit-overflow-scrolling: touch; }
   text-align: right;
   white-space: nowrap;
 }
+.metrics > span:first-child > small {
+  order: -1;
+}
 
 /* Nutrition tab only: numbers stay LTR; units come after them in RTL reading order. */
 .nutrition-target > div:not(.nutrition-target-actions) > b > em {
