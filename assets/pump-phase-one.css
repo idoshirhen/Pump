@@ -46,12 +46,11 @@ body { -webkit-overflow-scrolling: touch; }
 .nutrition-target { grid-template-columns: 1fr 1fr; }
 .nutrition-target-actions { grid-column: 1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .nutrition-target-actions button { min-height:42px; color:#111; background:#ff6b00; border:1px solid #ff6b00; border-radius:14px; font-size:11px; font-weight:900; }
-.food-actions { justify-content:flex-end; }
+.food-actions { justify-content:flex-start; text-align:right; direction:rtl; }
 
 /* RTL layout stays right-aligned; only the numeric run itself is LTR. */
 .nutrition-target > div:not(.nutrition-target-actions),
-.daily-head > div,
-.metrics > span {
+.daily-head > div {
   direction: rtl;
   text-align: right;
 }
@@ -68,8 +67,11 @@ body { -webkit-overflow-scrolling: touch; }
 .metrics > span {
   display: flex;
   flex-wrap: wrap;
+  direction: ltr;
+  unicode-bidi: isolate;
   justify-content: flex-end;
   align-items: baseline;
+  text-align: right;
   column-gap: 3px;
 }
 .metrics > span > b {
@@ -105,6 +107,19 @@ body { -webkit-overflow-scrolling: touch; }
 }
 .nutrition-target.over-target > div:not(.nutrition-target-actions) > b::after {
   color: #ff8e88;
+}
+
+/* Home tab: use the same proven unit ordering as the nutrition tab. */
+.daily-head b > em {
+  display: none;
+}
+.daily-head b::after {
+  content: "קל׳";
+  order: -1;
+  direction: rtl;
+  unicode-bidi: isolate;
+  font-style: normal;
+  color: #ff7a20;
 }
 
 .workout-complete { color:#121212; background:#ff6b00; border:0; border-radius:13px; width:100%; margin-top:13px; padding:13px; font-weight:900; }
