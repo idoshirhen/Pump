@@ -47,9 +47,21 @@ body { -webkit-overflow-scrolling: touch; }
 .nutrition-target-actions { grid-column: 1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .nutrition-target-actions button { min-height:42px; color:#111; background:#ff6b00; border:1px solid #ff6b00; border-radius:14px; font-size:11px; font-weight:900; }
 .food-actions { justify-content:flex-end; }
+
+/* Keep numeric progress values in the natural Israeli LTR order inside the RTL UI. */
 .nutrition-target b,
-.daily-head b,
-.metrics > span > b { direction:ltr; unicode-bidi:plaintext; }
+.daily-head b {
+  direction:ltr;
+  unicode-bidi:isolate;
+}
+.metrics > span {
+  direction:ltr;
+  unicode-bidi:isolate;
+}
+.metrics > span > small {
+  direction:rtl;
+  unicode-bidi:isolate;
+}
 
 .workout-complete { color:#121212; background:#ff6b00; border:0; border-radius:13px; width:100%; margin-top:13px; padding:13px; font-weight:900; }
 .workout-complete.done { color:#bdeecb; background:#173f2b; border:1px solid #3f8a62; }
