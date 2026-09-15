@@ -1,38 +1,40 @@
 /* PUMP exercise animation previews */
-.workout-card .exercise-list article.has-exercise-demo {
+.workout-card .exercise-list article[data-exercise-demo] {
   display: grid;
   grid-template-columns: 98px 28px minmax(0, 1fr);
   align-items: start;
   column-gap: 10px;
 }
-.workout-card .exercise-list article.has-exercise-demo > .exercise-demo {
+.workout-card .exercise-list article[data-exercise-demo]::before {
+  content: "";
   grid-column: 1;
   grid-row: 1;
-}
-.workout-card .exercise-list article.has-exercise-demo > span {
-  grid-column: 2;
-  grid-row: 1;
-}
-.workout-card .exercise-list article.has-exercise-demo > div {
-  grid-column: 3;
-  grid-row: 1;
-}
-.exercise-demo {
   display: block;
   width: 98px;
   height: 140px;
-  object-fit: contain;
-  object-position: center;
   border-radius: 14px;
   border: 1px solid #343439;
-  background: #101012;
+  background-color: #101012;
+  background-image: var(--pump-exercise-image);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
+.workout-card .exercise-list article[data-exercise-demo] > span {
+  grid-column: 2;
+  grid-row: 1;
+}
+.workout-card .exercise-list article[data-exercise-demo] > div {
+  grid-column: 3;
+  grid-row: 1;
+}
+
 @media (max-width: 510px) {
-  .workout-card .exercise-list article.has-exercise-demo {
+  .workout-card .exercise-list article[data-exercise-demo] {
     grid-template-columns: 82px 26px minmax(0, 1fr);
     column-gap: 8px;
   }
-  .exercise-demo {
+  .workout-card .exercise-list article[data-exercise-demo]::before {
     width: 82px;
     height: 116px;
     border-radius: 12px;
