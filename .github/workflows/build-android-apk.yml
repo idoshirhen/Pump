@@ -2,13 +2,6 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'android/**'
-      - 'assets/**'
-      - 'index.html'
-      - 'scripts/sync-android-assets.mjs'
-      - '.github/workflows/build-android-apk.yml'
 
 permissions:
   contents: read
