@@ -1,6 +1,6 @@
 (() => {
   const BASE = '/Pump/assets/exercises/';
-  const MEDIA_VERSION = '20260915g';
+  const MEDIA_VERSION = '20260915h';
 
   const files = {
     squat: 'squat.webp',
@@ -50,10 +50,14 @@
     ['Dead Bug', 'dead-bug'], ['דד באג', 'dead-bug'], ['דד־באג', 'dead-bug']
   ]);
 
-  function resolveSlug(article) {
+  function articleText(article) {
     const title = article.querySelector('div > b')?.textContent?.trim() || '';
     const body = article.textContent || '';
-    const text = `${title} ${body}`;
+    return { title, body, text: `${title} ${body}` };
+  }
+
+  function resolveSlug(article) {
+    const { title, body, text } = articleText(article);
     const has = (...parts) => parts.some(part => text.includes(part));
 
     // Core - exact movement first.
@@ -64,7 +68,6 @@
     if (has('לחיצת רגליים')) return 'leg-press';
     if (has('הרמת אגן', 'גשר ישבן', 'היפ תראסט', 'Glute Bridge')) return 'glute-bridge';
     if (has('סקוואט', 'ישיבה וקימה מכיסא', 'Squat')) return 'squat';
-    // Side-band walking has no matching demo in the current library, so do not fake one.
     if (has('הליכת צד עם גומייה')) return null;
 
     // Chest / push.
@@ -73,10 +76,9 @@
     if (has('שכיבות סמיכה בשיפוע', 'Incline Push-Up')) return 'incline-push-up';
     if (has('שכיבות סמיכה', 'Push-Up')) return 'push-up';
     if (has('מקבילים על ספסל', 'Bench Dips')) return 'bench-dips';
-    // Wall/band chest presses do not yet have a truly matching demo.
     if (has('לחיצה מול קיר', 'חזה · לחיצה עם גומייה')) return null;
 
-    // Back / pull. For the combined gym label, show the first exercise named: lat pulldown.
+    // Back / pull.
     if (has('פולי עליון', 'Lat Pulldown')) return 'lat-pulldown';
     if (has('חתירה ביד אחת', 'One-Arm Dumbbell Row')) return 'one-arm-dumbbell-row';
     if (has('חתירה עם גומייה', 'משיכת גומייה קלה לגוף', 'Resistance Band Row')) return 'resistance-band-row';
@@ -87,7 +89,7 @@
     if (has('הרחקות לצדדים', 'הרחקת כתפיים', 'Dumbbell Lateral Raise')) return 'dumbbell-lateral-raise';
     if (has('לחיצת כתפיים', 'Dumbbell Shoulder Press')) return 'dumbbell-shoulder-press';
 
-    // Arms. These variants use the same elbow-flexion movement even if resistance changes.
+    // Arms.
     if (has('כפיפת פטיש', 'Hammer Curl')) return 'hammer-curl';
     if (has('כפיפת מרפקים', 'Dumbbell Biceps Curl')) return 'dumbbell-biceps-curl';
     if (has('פשיטת מרפקים מעל הראש', 'Overhead Triceps Extension')) return 'overhead-triceps-extension';
@@ -113,19 +115,69 @@
     return exactNameMap.get(title) || null;
   }
 
+  function resolveExplanation(article) {
+    const { title, body, text } = articleText(article);
+    const has = (...parts) => parts.some(part => text.includes(part));
+
+    if (has('דד־באג', 'דד באג', 'Dead Bug')) return 'שכבו על הגב עם ירכיים וברכיים ב־90°, הצמידו את הגב התחתון לרצפה והרחיקו לאט יד ורגל נגדיות. חזרו למרכז והחליפו צד.';
+    if (has('פלאנק', 'Plank') || (title === 'בטן' && !body.includes('לכל צד'))) return 'הניחו אמות על הרצפה, ישרו את הגוף מהראש עד העקבים, כווצו בטן וישבן ושמרו שהאגן לא שוקע. נשמו רגיל לאורך ההחזקה.';
+
+    if (has('היפ תראסט במכונה')) return 'מקמו את הגב העליון על המשענת ואת כפות הרגליים יציבות. דחפו את האגן למעלה דרך העקבים, כווצו ישבן בשיא התנועה והורידו בשליטה.';
+    if (has('הרמת אגן', 'גשר ישבן', 'Glute Bridge')) return 'שכבו על הגב עם ברכיים כפופות וכפות רגליים ברוחב האגן. דחפו דרך העקבים, הרימו את האגן עד שהגוף בקו ישר וכווצו ישבן לפני ירידה איטית.';
+    if (has('הליכת צד עם גומייה')) return 'מקמו גומייה מעל הברכיים או סביב הקרסוליים, כופפו מעט ברכיים והישארו נמוכים. בצעו צעדים קטנים לצד תוך שמירה על מתח בגומייה וברכיים בקו האצבעות.';
+    if (has('לחיצת רגליים')) return 'מקמו את כפות הרגליים ברוחב כתפיים על הפלטה. הורידו את המשקל בטווח נוח ודחפו חזרה דרך כל כף הרגל בלי לנעול את הברכיים.';
+    if (has('ישיבה וקימה מכיסא')) return 'שבו על קצה הכיסא עם כפות רגליים מתחת לברכיים. הטו מעט את הגוף קדימה, קומו דרך העקבים עד עמידה מלאה ושבו חזרה לאט ובשליטה.';
+    if (has('סקוואט', 'Squat') || title === 'רגליים') return 'עמדו ברוחב כתפיים, שלחו את האגן לאחור ולמטה ושמרו חזה פתוח וברכיים בקו האצבעות. עלו חזרה דרך העקבים בלי לקרוס פנימה.';
+
+    if (has('לחיצה מול קיר')) return 'עמדו מול קיר, הניחו ידיים מעט רחב מרוחב כתפיים ושמרו גוף ישר. כופפו מרפקים והקריבו את החזה לקיר, ואז דחפו חזרה בשליטה.';
+    if (has('לחיצת חזה במכונה', 'Chest Press Machine')) return 'כוונו את המושב כך שהידיות יהיו בגובה אמצע החזה. הצמידו גב למשענת, דחפו קדימה כמעט עד יישור המרפקים והחזירו לאט.';
+    if (has('לחיצת חזה עם משקולות', 'Dumbbell Floor Press')) return 'שכבו על הגב עם ברכיים כפופות והחזיקו משקולות לצד החזה. דחפו אותן מעל החזה עד כמעט יישור הידיים והורידו עד שהזרועות נוגעות בעדינות ברצפה.';
+    if (has('חזה · לחיצה עם גומייה')) return 'עיגנו גומייה מאחור בגובה החזה, החזיקו קצוות ליד הצלעות ודחפו את הידיים קדימה. חזרו לאט בלי לתת לגומייה למשוך את הכתפיים לאחור.';
+    if (has('שכיבות סמיכה בשיפוע', 'Incline Push-Up') || (title === 'חזה וידיים' && has('שולחן', 'ספה'))) return 'הניחו ידיים על שולחן או ספסל יציב ושמרו גוף בקו ישר. הורידו את החזה לכיוון המשטח עם מרפקים באלכסון לאחור ודחפו חזרה.';
+    if (has('שכיבות סמיכה', 'Push-Up') || title === 'חזה וידיים') return 'מקמו ידיים מעט רחב מהכתפיים ושמרו גוף בקו ישר. הורידו את החזה לכיוון הרצפה עם מרפקים באלכסון לאחור ודחפו חזרה בלי לשקוע באגן.';
+    if (has('מקבילים על ספסל', 'Bench Dips')) return 'שבו בקצה ספסל, הניחו ידיים ליד האגן והחליקו קדימה. כופפו מרפקים לאחור עד טווח נוח ודחפו דרך כפות הידיים חזרה למעלה.';
+
+    if (has('פולי עליון', 'Lat Pulldown')) return 'שבו יציב, אחזו במוט מעט רחב מהכתפיים ומשכו אותו לכיוון החזה העליון תוך הורדת השכמות. החזירו את המוט למעלה לאט בלי להתנדנד.';
+    if (has('חתירה ביד אחת', 'One-Arm Dumbbell Row')) return 'תמכו ביד אחת על ספסל ושמרו גב ניטרלי. משכו את המשקולת לכיוון הצלעות כשהמרפק נע לאחור, עצרו לרגע והורידו בשליטה.';
+    if (has('חתירה עם גומייה', 'משיכת גומייה קלה לגוף', 'Resistance Band Row')) return 'עיגנו את הגומייה מולכם, שבו או עמדו זקוף ומשכו את הידיים לכיוון הצלעות. קרבו שכמות בלי להרים כתפיים והחזירו לאט.';
+    if (has('חתירה בכבל', 'חתירה במכונה', 'Seated Cable Row')) return 'שבו זקוף עם חזה פתוח, משכו את הידית לכיוון הבטן תוך קירוב השכמות ושמרו מרפקים קרוב לגוף. החזירו קדימה בשליטה.';
+    if (has('Y-T-W')) return 'שכבו על הבטן והרימו את הידיים מעט מהרצפה בשלוש צורות: Y, אחר כך T ואז W. בכל מצב משכו שכמות מעט לאחור ולמטה בלי לכווץ את הצוואר.';
+    if (has('כיווץ שכמות', 'קירוב שכמות')) return 'שבו או עמדו זקוף, הורידו כתפיים מהאוזניים ומשכו את השכמות בעדינות לאחור ולמטה. החזיקו שנייה ושחררו בלי לקשת את הגב.';
+    if (title === 'גב') return body.includes('מלמעלה') ? 'שבו זקוף, משכו את הידיים מלמעלה לכיוון החזה תוך הורדת השכמות והחזירו לאט.' : 'שמרו גב ניטרלי ומשכו את ההתנגדות לכיוון הגוף תוך קירוב השכמות. החזירו בשליטה בלי להתנדנד.';
+
+    if (has('הרחקות לצדדים', 'הרחקת כתפיים', 'Dumbbell Lateral Raise')) return 'עמדו זקוף עם מרפקים מעט כפופים. הרימו את הידיים לצדדים עד בערך גובה הכתפיים והורידו לאט, בלי להרים כתפיים לכיוון האוזניים.';
+    if (has('לחיצת כתפיים', 'Dumbbell Shoulder Press') || title === 'כתפיים') return 'החזיקו את המשקולות בגובה הכתפיים, כווצו בטן ודחפו מעל הראש בלי לקשת את הגב. הורידו חזרה עד גובה הכתפיים בשליטה.';
+
+    if (has('כפיפת פטיש', 'Hammer Curl')) return 'החזיקו משקולות באחיזה ניטרלית כשהאגודלים פונים קדימה. שמרו מרפקים צמודים לגוף, כופפו עד הכתפיים והורידו לאט.';
+    if (has('כפיפת מרפקים', 'Dumbbell Biceps Curl') || title === 'ידיים') return 'עמדו זקוף ושמרו מרפקים צמודים לצדי הגוף. כופפו את המרפקים בלי להזיז את הכתפיים, עצרו למעלה והורידו את ההתנגדות לאט.';
+    if (has('פשיטת מרפקים מעל הראש', 'Overhead Triceps Extension')) return 'החזיקו משקולת מעל הראש בשתי ידיים, שמרו מרפקים פונים קדימה וכופפו אותם כדי להוריד את המשקולת מאחורי הראש. ישרו חזרה בלי לפתוח מרפקים לצדדים.';
+
+    return 'בצעו את התנועה לאט ובשליטה, שמרו על יציבה יציבה ועצרו אם מופיע כאב חד או לא רגיל.';
+  }
+
   function decorate() {
     document.querySelectorAll('.workout-card .exercise-list article').forEach(article => {
       const slug = resolveSlug(article);
+      const explanation = resolveExplanation(article);
+      const whyLine = article.querySelector('div > p');
+      const alternativeLine = article.querySelector('div > em');
 
-      // React can reuse an article between renders, so always clear stale mappings first.
+      if (whyLine) whyLine.dataset.pumpExplanation = explanation;
+
+      if (alternativeLine) {
+        const rawAlternative = alternativeLine.textContent?.trim() || '';
+        const cleanAlternative = rawAlternative.replace(/^(?:חלופה:\s*)+/u, '').trim();
+        alternativeLine.dataset.pumpAlternative = cleanAlternative;
+      }
+
+      // React can reuse an article between renders, so always clear stale media mappings first.
       if (!slug || !media[slug]) {
         delete article.dataset.exerciseDemo;
         article.style.removeProperty('--pump-exercise-image');
-        return;
+      } else {
+        article.dataset.exerciseDemo = slug;
+        article.style.setProperty('--pump-exercise-image', `url("${media[slug]}?v=${MEDIA_VERSION}")`);
       }
-
-      article.dataset.exerciseDemo = slug;
-      article.style.setProperty('--pump-exercise-image', `url("${media[slug]}?v=${MEDIA_VERSION}")`);
     });
   }
 
@@ -154,5 +206,12 @@
     if (retries >= 20) window.clearInterval(retryTimer);
   }, 250);
 
-  window.PUMP_EXERCISE_MEDIA = { media, files, exactNameMap, refresh: decorate, resolveSlug };
+  window.PUMP_EXERCISE_MEDIA = {
+    media,
+    files,
+    exactNameMap,
+    refresh: decorate,
+    resolveSlug,
+    resolveExplanation
+  };
 })();
