@@ -32,6 +32,28 @@
   min-width: 0;
 }
 
+/* Add a practical how-to line below the existing "why" text without mutating React markup. */
+.workout-card .exercise-list article > div > p[data-pump-explanation]::after {
+  content: "הסבר: " attr(data-pump-explanation);
+  display: block;
+  color: #cdcdcf;
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.5;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* The React bundle already prints "חלופה:". Some data also contained that prefix, so render one clean label. */
+.workout-card .exercise-list article > div > em[data-pump-alternative] {
+  font-size: 0 !important;
+}
+.workout-card .exercise-list article > div > em[data-pump-alternative]::before {
+  content: "חלופה: " attr(data-pump-alternative);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 /* If there is no matching animation, do not show a misleading empty/media frame. */
 .workout-card .exercise-list article:not([data-exercise-demo]) {
   grid-template-columns: 28px minmax(0, 1fr);
