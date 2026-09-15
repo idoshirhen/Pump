@@ -32,11 +32,11 @@
   min-width: 0;
 }
 
-/* Add a practical how-to line below the existing "why" text without mutating React markup. */
+/* How-to line: both the label and the explanation text are green. */
 .workout-card .exercise-list article > div > p[data-pump-explanation]::after {
   content: "הסבר: " attr(data-pump-explanation);
   display: block;
-  color: #cdcdcf;
+  color: #69d69b;
   margin-top: 5px;
   font-size: 10px;
   line-height: 1.5;
@@ -44,14 +44,24 @@
   font-weight: 400;
 }
 
-/* The React bundle already prints "חלופה:". Some data also contained that prefix, so render one clean label. */
+/* Alternative line: orange label, white alternative text. */
 .workout-card .exercise-list article > div > em[data-pump-alternative] {
+  display: block;
   font-size: 0 !important;
+  line-height: 1.45;
+  font-style: normal;
 }
 .workout-card .exercise-list article > div > em[data-pump-alternative]::before {
-  content: "חלופה: " attr(data-pump-alternative);
+  content: "חלופה: ";
+  color: #ff6b00;
   font-size: 10px;
-  line-height: 1.45;
+  font-weight: 700;
+}
+.workout-card .exercise-list article > div > em[data-pump-alternative]::after {
+  content: attr(data-pump-alternative);
+  color: #f5f5f5;
+  font-size: 10px;
+  font-weight: 400;
 }
 
 /* If there is no matching animation, do not show a misleading empty/media frame. */
