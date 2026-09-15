@@ -83,15 +83,17 @@
       const img = document.createElement('img');
       img.className = 'exercise-demo';
       img.alt = `הדגמת ${article.querySelector('div > b')?.textContent?.trim() || 'תרגיל'}`;
-      img.loading = 'lazy';
+      img.loading = 'eager';
       img.decoding = 'async';
       img.src = media[slug];
       img.dataset.exerciseSlug = slug;
-      img.style.display = 'none';
+
+      // Keep the image in layout while it loads. Hiding a lazy image with display:none
+      // can prevent the browser from ever requesting it.
+      article.classList.add('has-exercise-demo');
+      article.dataset.exerciseMediaReady = 'loading';
 
       img.addEventListener('load', () => {
-        img.style.display = 'block';
-        article.classList.add('has-exercise-demo');
         article.dataset.exerciseMediaReady = '1';
       }, { once: true });
 
