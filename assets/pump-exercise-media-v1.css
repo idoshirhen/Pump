@@ -1,4 +1,4 @@
-/* PUMP exercise animation previews - CSS-only, independent of React DOM mutation */
+/* PUMP exercise animation previews - media is selected dynamically from the exercise text. */
 .workout-card .exercise-list article {
   display: grid !important;
   /* RTL grid: column 1 is right, column 3 is left. */
@@ -16,6 +16,7 @@
   border-radius: 14px;
   border: 1px solid #343439;
   background-color: #101012;
+  background-image: var(--pump-exercise-image, none);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -31,38 +32,21 @@
   min-width: 0;
 }
 
-/* Workout A: the first workout-card immediately after the weekly plan. */
-.weekly-plan + .workout-card .exercise-list article:nth-child(1)::before {
-  background-image: url('/Pump/assets/exercises/squat.webp?v=20260915f');
+/* If there is no matching animation, do not show a misleading empty/media frame. */
+.workout-card .exercise-list article:not([data-exercise-demo]) {
+  grid-template-columns: 28px minmax(0, 1fr);
 }
-.weekly-plan + .workout-card .exercise-list article:nth-child(2)::before {
-  background-image: url('/Pump/assets/exercises/push-up.webp?v=20260915f');
-}
-.weekly-plan + .workout-card .exercise-list article:nth-child(3)::before {
-  background-image: url('/Pump/assets/exercises/one-arm-dumbbell-row.webp?v=20260915f');
-}
-.weekly-plan + .workout-card .exercise-list article:nth-child(4)::before {
-  background-image: url('/Pump/assets/exercises/plank.webp?v=20260915f');
-}
-
-/* Workout B: the second workout-card. */
-.weekly-plan + .workout-card + .workout-card .exercise-list article:nth-child(1)::before {
-  background-image: url('/Pump/assets/exercises/glute-bridge.webp?v=20260915f');
-}
-.weekly-plan + .workout-card + .workout-card .exercise-list article:nth-child(2)::before {
-  background-image: url('/Pump/assets/exercises/lat-pulldown.webp?v=20260915f');
-}
-.weekly-plan + .workout-card + .workout-card .exercise-list article:nth-child(3)::before {
-  background-image: url('/Pump/assets/exercises/dumbbell-shoulder-press.webp?v=20260915f');
-}
-.weekly-plan + .workout-card + .workout-card .exercise-list article:nth-child(4)::before {
-  background-image: url('/Pump/assets/exercises/dead-bug.webp?v=20260915f');
+.workout-card .exercise-list article:not([data-exercise-demo])::before {
+  display: none;
 }
 
 @media (max-width: 510px) {
   .workout-card .exercise-list article {
     grid-template-columns: 26px minmax(0, 1fr) 52px;
     column-gap: 8px;
+  }
+  .workout-card .exercise-list article:not([data-exercise-demo]) {
+    grid-template-columns: 26px minmax(0, 1fr);
   }
   .workout-card .exercise-list article::before {
     width: 52px;
