@@ -1,16 +1,17 @@
 /* PUMP exercise animation previews - CSS-only, independent of React DOM mutation */
 .workout-card .exercise-list article {
   display: grid !important;
-  grid-template-columns: 98px 28px minmax(0, 1fr);
+  /* RTL grid: column 1 is the right side, column 3 is the left side. */
+  grid-template-columns: minmax(0, 1fr) 28px 63px;
   align-items: start;
   column-gap: 10px;
 }
 .workout-card .exercise-list article::before {
   content: "";
-  grid-column: 1;
+  grid-column: 3;
   grid-row: 1;
   display: block;
-  width: 98px;
+  width: 63px;
   height: 140px;
   border-radius: 14px;
   border: 1px solid #343439;
@@ -24,7 +25,7 @@
   grid-row: 1;
 }
 .workout-card .exercise-list article > div {
-  grid-column: 3;
+  grid-column: 1;
   grid-row: 1;
   min-width: 0;
 }
@@ -59,11 +60,11 @@
 
 @media (max-width: 510px) {
   .workout-card .exercise-list article {
-    grid-template-columns: 82px 26px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 26px 52px;
     column-gap: 8px;
   }
   .workout-card .exercise-list article::before {
-    width: 82px;
+    width: 52px;
     height: 116px;
     border-radius: 12px;
   }
