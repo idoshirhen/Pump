@@ -76,50 +76,37 @@
       const slug = resolveSlug(article);
       if (!slug || !media[slug]) return;
 
-      const existing = article.querySelector(':scope > .exercise-demo');
-      if (existing?.dataset.exerciseSlug === slug) return;
-      if (existing) existing.remove();
-
-      const img = document.createElement('img');
-      img.className = 'exercise-demo';
-      img.alt = `הדגמת ${article.querySelector('div > b')?.textContent?.trim() || 'תרגיל'}`;
-      img.loading = 'eager';
-      img.decoding = 'async';
-      img.src = media[slug];
-      img.dataset.exerciseSlug = slug;
-
-      // Keep the image in layout while it loads. Hiding a lazy image with display:none
-      // can prevent the browser from ever requesting it.
-      article.classList.add('has-exercise-demo');
-      article.dataset.exerciseMediaReady = 'loading';
-
-      img.addEventListener('load', () => {
-        article.dataset.exerciseMediaReady = '1';
-      }, { once: true });
-
-      img.addEventListener('error', () => {
-        article.classList.remove('has-exercise-demo');
-        article.dataset.exerciseMediaReady = '0';
-        img.remove();
-      }, { once: true });
-
-      article.insertBefore(img, article.firstChild);
+      // Do not inject extra DOM children into React-owned markup. React can remove them
+      // on the next render. A data attribute + CSS pseudo-element is stable across renders.
+      article.dataset.exerciseDemo = slug;
+      article.style.setProperty('--pump-exercise-image', `url("${media[slug]}?v=20260915e")`);
     });
   }
 
   let scheduled = false;
-  const observer = new MutationObserver(() => {
+  const scheduleDecorate = () => {
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => {
       scheduled = false;
       decorate();
     });
-  });
+  };
 
+  const observer = new MutationObserver(scheduleDecorate);
   observer.observe(document.documentElement, { childList: true, subtree: true });
+
   document.addEventListener('DOMContentLoaded', decorate);
+  document.addEventListener('click', () => setTimeout(decorate, 0), true);
   decorate();
+
+  // A short startup retry window handles React/StrictMode timing without a permanent poll.
+  let retries = 0;
+  const retryTimer = window.setInterval(() => {
+    decorate();
+    retries += 1;
+    if (retries >= 20) window.clearInterval(retryTimer);
+  }, 250);
 
   window.PUMP_EXERCISE_MEDIA = { media, files, exactNameMap, refresh: decorate, resolveSlug };
 })();
