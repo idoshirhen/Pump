@@ -234,3 +234,16 @@ body { -webkit-overflow-scrolling: touch; }
   font-size: 22px;
   line-height: 1;
 }
+
+
+/* Account reset / delete actions */
+.settings .pump-reset-account span { color: #ffb27e; }
+.settings .pump-delete-account {
+  color: #ff8e88;
+  border-color: #71383b;
+  background: #2a1719;
+}
+.settings .pump-delete-account span { color: #ff8e88; }
+.settings .pump-delete-account i { color: #ff8e88; }
+.settings .pump-reset-account:disabled,
+.settings .pump-delete-account:disabled { opacity: .55; }
