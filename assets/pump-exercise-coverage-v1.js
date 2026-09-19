@@ -1,21 +1,22 @@
 (() => {
   const FEMALE_BASE = '/Pump/assets/exercises/';
-  const VERSION = '20260918a';
+  const MALE_BASE = '/Pump/assets/exercises-male/';
+  const VERSION = '20260919a';
 
   const missingMedia = [
-    { match: ['הליכת צד עם גומייה'], slug: 'side-band-walk' },
-    { match: ['לחיצה מול קיר'], slug: 'wall-push-up' },
+    { match: ['הליכת צד עם גומייה'], slug: 'lateral-band-walk' },
+    { match: ['לחיצה מול קיר'], slug: 'wall-press' },
     { match: ['חזה · לחיצה עם גומייה', 'לחיצה עם גומייה'], slug: 'band-chest-press' },
     { match: ['קירוב שכמות בישיבה'], slug: 'seated-scapular-retraction' },
     { match: ['Y-T-W בשכיבה', 'Y-T-W'], slug: 'prone-ytw' },
     { match: ['קירוב שכמות עדין'], slug: 'gentle-scapular-retraction' },
-    { match: ['הרחקות ידיים ללא משקל'], slug: 'no-weight-lateral-raise' }
+    { match: ['הרחקות ידיים ללא משקל'], slug: 'bodyweight-lateral-raise' }
   ];
 
   const titleAliases = [
     {
       match: ['הרחקות לצדדים בכבל', 'הרחקות לצדדים עם גומייה', 'הרחקת כתפיים'],
-      title: 'הרחקות לצדדים · כבל/משקולות/גומייה'
+      title: 'הרחקות לצדדים · כבל/משקולות'
     },
     {
       match: ['כפיפת מרפקים בכבל', 'כפיפת מרפקים עם גומייה', 'כפיפת מרפקים עם בקבוקים'],
@@ -37,15 +38,21 @@
 
   const checked = new Map();
 
-  function imageExists(slug) {
-    if (checked.has(slug)) return checked.get(slug);
+  function currentSex() {
+    return window.PUMP_EXERCISE_GENDER?.getSex?.() === 'male' ? 'male' : 'female';
+  }
+
+  function imageExists(slug, sex) {
+    const key = `${sex}:${slug}`;
+    if (checked.has(key)) return checked.get(key);
+    const base = sex === 'male' ? MALE_BASE : FEMALE_BASE;
     const promise = new Promise(resolve => {
       const img = new Image();
       img.onload = () => resolve(true);
       img.onerror = () => resolve(false);
-      img.src = `${FEMALE_BASE}${slug}.webp?v=${VERSION}`;
+      img.src = `${base}${slug}.webp?v=${VERSION}`;
     });
-    checked.set(slug, promise);
+    checked.set(key, promise);
     return promise;
   }
 
@@ -66,11 +73,19 @@
   }
 
   async function addMissingMedia(article) {
-    if (article.dataset.exerciseDemo) return;
     const text = article.textContent || '';
     const rule = missingMedia.find(item => item.match.some(part => text.includes(part)));
     if (!rule) return;
-    if (!(await imageExists(rule.slug))) return;
+
+    const sex = currentSex();
+    if (!(await imageExists(rule.slug, sex))) {
+      if (article.dataset.exerciseDemo === rule.slug) {
+        delete article.dataset.exerciseDemo;
+        article.classList.remove('has-exercise-demo');
+        article.style.removeProperty('--pump-exercise-image');
+      }
+      return;
+    }
 
     article.dataset.exerciseDemo = rule.slug;
     article.classList.add('has-exercise-demo');
@@ -98,6 +113,10 @@
   observer.observe(document.documentElement, { childList: true, subtree: true });
   document.addEventListener('DOMContentLoaded', schedule);
   document.addEventListener('click', () => setTimeout(apply, 40), true);
+  window.addEventListener('pump:user-sex', () => {
+    checked.clear();
+    schedule();
+  });
 
   let retries = 0;
   const timer = setInterval(() => {
