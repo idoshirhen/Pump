@@ -1,7 +1,7 @@
 (() => {
   const FEMALE_BASE = '/Pump/assets/exercises/';
   const MALE_BASE = '/Pump/assets/exercises-male/';
-  const VERSION = '20260919a';
+  const VERSION = '20260919b';
 
   const missingMedia = [
     { match: ['הליכת צד עם גומייה'], slug: 'lateral-band-walk' },
@@ -72,15 +72,22 @@
     }
   }
 
+  function removeInlineMedia(article) {
+    article.querySelectorAll('img, picture, video, canvas').forEach(node => node.remove());
+  }
+
   async function addMissingMedia(article) {
     const text = article.textContent || '';
     const rule = missingMedia.find(item => item.match.some(part => text.includes(part)));
     if (!rule) return;
 
+    removeInlineMedia(article);
+
     const sex = currentSex();
     if (!(await imageExists(rule.slug, sex))) {
       if (article.dataset.exerciseDemo === rule.slug) {
         delete article.dataset.exerciseDemo;
+        delete article.dataset.exerciseGender;
         article.classList.remove('has-exercise-demo');
         article.style.removeProperty('--pump-exercise-image');
       }
@@ -95,6 +102,7 @@
   function apply() {
     document.querySelectorAll('.workout-card .exercise-list article').forEach(article => {
       normalizeTitles(article);
+      removeInlineMedia(article);
       addMissingMedia(article);
     });
   }
