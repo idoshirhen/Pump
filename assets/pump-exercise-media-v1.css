@@ -1,15 +1,25 @@
 /* PUMP exercise animation previews - media is selected dynamically from the exercise text. */
 .workout-card .exercise-list article {
+  position: relative;
   display: grid !important;
-  /* RTL grid: column 1 is right, column 3 is left. */
-  grid-template-columns: 28px minmax(0, 1fr) 63px;
+  /* RTL: first grid column is the number on the right, second is text. */
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: start;
   column-gap: 10px;
+  box-sizing: border-box;
 }
-.workout-card .exercise-list article::before {
+
+/* Reserve a dedicated strip on the LEFT for the animation. */
+.workout-card .exercise-list article[data-exercise-demo] {
+  padding-left: 73px !important;
+  min-height: 140px;
+}
+
+.workout-card .exercise-list article[data-exercise-demo]::before {
   content: "";
-  grid-column: 3;
-  grid-row: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
   display: block;
   width: 63px;
   height: 140px;
@@ -20,16 +30,31 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+  box-sizing: border-box;
+  z-index: 1;
 }
+
 .workout-card .exercise-list article > span {
   grid-column: 1;
   grid-row: 1;
   justify-self: center;
 }
+
 .workout-card .exercise-list article > div {
   grid-column: 2;
   grid-row: 1;
   min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Old/injected inline media must never sit on top of the exercise text. */
+.workout-card .exercise-list article img,
+.workout-card .exercise-list article picture,
+.workout-card .exercise-list article video,
+.workout-card .exercise-list article canvas {
+  display: none !important;
 }
 
 /* How-to line: both the label and the explanation text are green. */
@@ -64,9 +89,10 @@
   font-weight: 400;
 }
 
-/* If there is no matching animation, do not show a misleading empty/media frame. */
+/* If there is no matching animation, do not reserve animation space. */
 .workout-card .exercise-list article:not([data-exercise-demo]) {
-  grid-template-columns: 28px minmax(0, 1fr);
+  padding-left: 0 !important;
+  min-height: 0;
 }
 .workout-card .exercise-list article:not([data-exercise-demo])::before {
   display: none;
@@ -74,13 +100,16 @@
 
 @media (max-width: 510px) {
   .workout-card .exercise-list article {
-    grid-template-columns: 26px minmax(0, 1fr) 52px;
+    grid-template-columns: 26px minmax(0, 1fr);
     column-gap: 8px;
   }
-  .workout-card .exercise-list article:not([data-exercise-demo]) {
-    grid-template-columns: 26px minmax(0, 1fr);
+
+  .workout-card .exercise-list article[data-exercise-demo] {
+    padding-left: 60px !important;
+    min-height: 116px;
   }
-  .workout-card .exercise-list article::before {
+
+  .workout-card .exercise-list article[data-exercise-demo]::before {
     width: 52px;
     height: 116px;
     border-radius: 12px;
