@@ -2,14 +2,19 @@ import assert from 'node:assert/strict';
 import { CANONICAL_FOODS, CANONICAL_FOOD_BY_ID, CANONICAL_FOOD_BY_LEGACY_ALIAS } from '../src/nutrition/data/canonical-foods.js';
 import { createFoodRegistry, assertPlanningReady } from '../src/nutrition/data/food-registry.js';
 
-assert.equal(CANONICAL_FOODS.length, 19, 'canonical food library should contain 19 reviewed foods');
+assert.ok(CANONICAL_FOODS.length >= 36, 'canonical food library unexpectedly shrank');
 const registry = createFoodRegistry(CANONICAL_FOODS);
-assert.equal(registry.size(), 19);
+assert.equal(registry.size(), CANONICAL_FOODS.length, 'canonical food IDs must be unique');
+
+const allowedProviders = new Set([
+  'israel-ministry-of-health-national-nutrition-database',
+  'usda-fooddata-central',
+]);
 
 for (const food of CANONICAL_FOODS) {
   assert.equal(food.source.status, 'verified');
-  assert.equal(food.source.provider, 'israel-ministry-of-health-national-nutrition-database');
-  assert.ok(food.source.sourceCode, `missing MOH code for ${food.id}`);
+  assert.ok(allowedProviders.has(food.source.provider), `unapproved source provider for ${food.id}: ${food.source.provider}`);
+  assert.ok(food.source.sourceCode, `missing source code for ${food.id}`);
   assertPlanningReady(food);
   assert.equal(CANONICAL_FOOD_BY_ID[food.id], food);
 }
@@ -29,10 +34,18 @@ const requiredAliases = {
   'רוטב עגבניות': 'tomato-sauce-no-oil',
   'טונה במים': 'tuna-canned-water',
   'טונה במים מסוננת': 'tuna-canned-water',
+  'אורז מבושל': 'rice-cooked',
+  'תפוח אדמה אפוי': 'potato-baked',
+  'חזה עוף מבושל': 'chicken-breast-roasted',
+  'טופו': 'tofu-firm',
+  'תפוח': 'apple-raw',
+  'חומוס מבושל': 'chickpeas-cooked',
+  'עדשים מבושלות': 'lentils-cooked',
+  'תירס': 'corn-sweet-cooked',
 };
 
 for (const [alias, id] of Object.entries(requiredAliases)) {
   assert.equal(CANONICAL_FOOD_BY_LEGACY_ALIAS[alias], id, `bad canonical mapping for ${alias}`);
 }
 
-console.log('PUMP 3 canonical food library checks passed');
+console.log(`PUMP 3 canonical food library checks passed (${CANONICAL_FOODS.length} verified foods)`);
