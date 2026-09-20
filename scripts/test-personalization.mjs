@@ -46,6 +46,8 @@ const dom = new JSDOM('<!doctype html><div id="root"></div>', {
   url: 'https://pump.test/Pump/', runScripts: 'dangerously', pretendToBeVisual: true,
 });
 const { window } = dom;
+window.scrollTo = () => {};
+window.HTMLElement.prototype.scrollTo = () => {};
 const pageErrors = [];
 window.addEventListener('error', (event) => pageErrors.push(event.error || event.message));
 window.Headers = Headers;
