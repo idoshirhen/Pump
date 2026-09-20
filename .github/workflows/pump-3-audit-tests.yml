@@ -37,6 +37,9 @@ jobs:
       - name: Check first verified canonical food batch
         run: node pump3/tests/official-foods-v1.test.mjs
 
+      - name: Check combined verified canonical food library
+        run: node pump3/tests/canonical-foods.test.mjs
+
       - name: Audit meal coverage using verified nutrition only
         run: node scripts/audit-pump3-meal-verification.mjs
 
