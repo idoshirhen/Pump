@@ -5,8 +5,8 @@ import { resolve } from 'node:path';
 const manifestPath = resolve('pump3/src/training/data/exercise-manifest.json');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const variants = [
-  { sex: 'female', dir: resolve('assets/exercises') },
-  { sex: 'male', dir: resolve('assets/exercises-male') },
+  { sex: 'female', dir: resolve('pump3/public/exercises/female') },
+  { sex: 'male', dir: resolve('pump3/public/exercises/male') },
 ];
 
 const failures = [];
@@ -21,7 +21,14 @@ function animationFrameCount(buffer) {
 for (const variant of variants) {
   const hashes = new Map();
   for (const exercise of manifest) {
-    if (!exercise.media?.[variant.sex]) continue;
+    const mediaState = exercise.media?.[variant.sex];
+    if (!mediaState?.available) {
+      if (mediaState?.quality === 'missing') {
+        warnings.push(`${variant.sex}/${exercise.id}: intentionally marked missing in manifest`);
+      }
+      continue;
+    }
+
     const path = resolve(variant.dir, `${exercise.id}.webp`);
     try {
       const info = await stat(path);
@@ -30,20 +37,35 @@ for (const variant of variants) {
       const isWebP = header.startsWith('RIFF') && header.endsWith('WEBP');
       const frames = animationFrameCount(buffer);
       const hash = createHash('sha256').update(buffer).digest('hex');
-      rows.push({ sex: variant.sex, id: exercise.id, bytes: info.size, frames, hash: hash.slice(0, 12) });
+      rows.push({
+        sex: variant.sex,
+        id: exercise.id,
+        quality: mediaState.quality,
+        bytes: info.size,
+        frames,
+        hash: hash.slice(0, 12),
+      });
       if (!isWebP) failures.push(`${variant.sex}/${exercise.id}: file is not a valid RIFF/WEBP container`);
-      if (frames < 2) warnings.push(`${variant.sex}/${exercise.id}: only ${frames || 1} detected frame(s); inspect visually`);
+      if (frames < 2) failures.push(`${variant.sex}/${exercise.id}: only ${frames || 1} detected frame(s)`);
       const previous = hashes.get(hash);
-      if (previous) failures.push(`${variant.sex}: ${previous} and ${exercise.id} are byte-for-byte identical`);
-      else hashes.set(hash, exercise.id);
+      if (previous) {
+        const currentIsKnownReplacement = mediaState.quality === 'replace';
+        const previousExercise = manifest.find((item) => item.id === previous);
+        const previousIsKnownReplacement = previousExercise?.media?.[variant.sex]?.quality === 'replace';
+        const message = `${variant.sex}: ${previous} and ${exercise.id} are byte-for-byte identical`;
+        if (currentIsKnownReplacement && previousIsKnownReplacement) warnings.push(`${message} (known replacement blocker)`);
+        else failures.push(message);
+      } else {
+        hashes.set(hash, exercise.id);
+      }
     } catch (error) {
-      if (error?.code === 'ENOENT') failures.push(`${variant.sex}/${exercise.id}: missing ${exercise.id}.webp`);
+      if (error?.code === 'ENOENT') failures.push(`${variant.sex}/${exercise.id}: missing ${exercise.id}.webp despite available=true`);
       else throw error;
     }
   }
 }
 
-console.table(rows.map(({ sex, id, bytes, frames, hash }) => ({ sex, id, bytes, frames, hash })));
+console.table(rows.map(({ sex, id, quality, bytes, frames, hash }) => ({ sex, id, quality, bytes, frames, hash })));
 if (warnings.length) {
   console.log('\nWarnings:');
   warnings.forEach((warning) => console.log(`- ${warning}`));
@@ -53,5 +75,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`\nExercise media audit passed for ${rows.length} required files.`);
+  console.log(`\nExercise media audit passed structural checks for ${rows.length} available files.`);
 }
