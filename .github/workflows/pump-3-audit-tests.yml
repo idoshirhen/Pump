@@ -26,15 +26,20 @@ jobs:
       - name: Check helper personalization matrix
         run: node scripts/test-personalization-helpers.mjs
 
-      - name: Check onboarding and app personalization flow
-        env:
-          PUMP_TEST_NODE_MODULES: /tmp/pump-personalization-test-deps/node_modules
-        run: node scripts/test-personalization.mjs
+      - name: Audit exercise media coverage
+        run: node scripts/audit-exercise-media.mjs
 
       - name: Syntax-check runtime patch scripts
+        if: always()
         run: |
           node --check assets/pump-nutrition-accuracy-v1.js
           node --check assets/pump-exercise-media-v1.js
           node --check assets/pump-exercise-coverage-v1.js
           node --check assets/pump-mobile-ui-v1.js
           node --check assets/pump-meal-structure-native-preview.js
+
+      - name: Check onboarding and app personalization flow
+        if: always()
+        env:
+          PUMP_TEST_NODE_MODULES: /tmp/pump-personalization-test-deps/node_modules
+        run: node scripts/test-personalization.mjs
