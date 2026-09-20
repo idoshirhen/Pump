@@ -37,6 +37,9 @@ jobs:
       - name: Check first verified canonical food batch
         run: node pump3/tests/official-foods-v1.test.mjs
 
+      - name: Audit meal coverage using verified nutrition only
+        run: node scripts/audit-pump3-meal-verification.mjs
+
       - name: Match ready legacy foods to official Ministry of Health rows
         run: node scripts/fetch-moh-food-candidates.mjs
 
