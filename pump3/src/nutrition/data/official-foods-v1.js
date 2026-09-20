@@ -81,7 +81,7 @@ export const OFFICIAL_FOODS_V1 = Object.freeze([
   foodFromIsraelMohRow(rows.sesameOil, { id: 'sesame-oil', state: 'ready', aliases: ['שמן שומשום'] }),
   foodFromIsraelMohRow(rows.oliveOil, { id: 'olive-oil', state: 'ready', aliases: ['שמן זית'] }),
   foodFromIsraelMohRow(rows.peanutButter, { id: 'peanut-butter', state: 'ready', aliases: ['חמאת בוטנים'] }),
-  foodFromIsraelMohRow(rows.wholeEgg, { id: 'whole-egg', state: 'raw', aliases: ['ביצה'] }),
+  foodFromIsraelMohRow(rows.wholeEgg, { id: 'whole-egg', state: 'raw', aliases: ['ביצה', 'ביצים'] }),
   foodFromIsraelMohRow(rows.hardBoiledEgg, { id: 'hard-boiled-egg', state: 'cooked', aliases: ['ביצה קשה', 'ביצים קשות'] }),
   foodFromIsraelMohRow(rows.bakedSalmon, { id: 'salmon-baked', state: 'baked', aliases: ['סלמון אפוי'] }),
   foodFromIsraelMohRow(rows.cookedCouscous, { id: 'couscous-cooked', state: 'cooked', aliases: ['קוסקוס מבושל'] }),
