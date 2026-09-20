@@ -1,0 +1,40 @@
+name: PUMP 3 Audit Tests
+
+on:
+  push:
+    branches: [pump-3-audit]
+  pull_request:
+    branches: [main]
+
+jobs:
+  personalization-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install isolated test dependencies
+        run: |
+          mkdir -p /tmp/pump-personalization-test-deps
+          cd /tmp/pump-personalization-test-deps
+          npm init -y
+          npm install jsdom@26
+
+      - name: Check helper personalization matrix
+        run: node scripts/test-personalization-helpers.mjs
+
+      - name: Check onboarding and app personalization flow
+        env:
+          PUMP_TEST_NODE_MODULES: /tmp/pump-personalization-test-deps/node_modules
+        run: node scripts/test-personalization.mjs
+
+      - name: Syntax-check runtime patch scripts
+        run: |
+          node --check assets/pump-nutrition-accuracy-v1.js
+          node --check assets/pump-exercise-media-v1.js
+          node --check assets/pump-exercise-coverage-v1.js
+          node --check assets/pump-mobile-ui-v1.js
+          node --check assets/pump-meal-structure-native-preview.js
