@@ -25,8 +25,14 @@ jobs:
       - name: Audit legacy nutrition catalog
         run: node scripts/audit-nutrition-catalog.mjs
 
+      - name: Audit PUMP 3 legacy food migration
+        run: node scripts/audit-pump3-food-migration.mjs
+
       - name: Check PUMP 3 nutrition engine
         run: node pump3/tests/nutrition-engine.test.mjs
+
+      - name: Check PUMP 3 official nutrition source adapter
+        run: node pump3/tests/nutrition-source.test.mjs
 
       - name: Check legacy runtime contract
         run: node scripts/test-legacy-runtime-contract.mjs
