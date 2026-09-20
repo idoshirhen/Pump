@@ -29,6 +29,10 @@ jobs:
       - name: Audit exercise media coverage
         run: node scripts/audit-exercise-media.mjs
 
+      - name: Audit legacy nutrition catalog
+        if: always()
+        run: node scripts/audit-nutrition-catalog.mjs
+
       - name: Syntax-check runtime patch scripts
         if: always()
         run: |
