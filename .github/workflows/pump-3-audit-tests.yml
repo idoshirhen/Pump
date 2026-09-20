@@ -34,6 +34,9 @@ jobs:
       - name: Check PUMP 3 official nutrition source adapter
         run: node pump3/tests/nutrition-source.test.mjs
 
+      - name: Check first verified canonical food batch
+        run: node pump3/tests/official-foods-v1.test.mjs
+
       - name: Match ready legacy foods to official Ministry of Health rows
         run: node scripts/fetch-moh-food-candidates.mjs
 
