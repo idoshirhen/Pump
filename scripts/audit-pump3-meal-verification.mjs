@@ -1,5 +1,5 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
-import { OFFICIAL_FOOD_BY_LEGACY_ALIAS } from '../pump3/src/nutrition/data/official-foods-v1.js';
+import { CANONICAL_FOOD_BY_LEGACY_ALIAS } from '../pump3/src/nutrition/data/canonical-foods.js';
 
 const source = await readFile('scripts/pump-catalog-helpers.js', 'utf8');
 
@@ -17,7 +17,7 @@ for (const line of source.split('\n')) {
   const verified = [];
   const unverified = [];
   for (const label of ingredients) {
-    const foodId = OFFICIAL_FOOD_BY_LEGACY_ALIAS[label];
+    const foodId = CANONICAL_FOOD_BY_LEGACY_ALIAS[label];
     if (foodId) verified.push({ label, foodId });
     else unverified.push(label);
   }
