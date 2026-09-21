@@ -26,6 +26,8 @@ export function planDailyNutrition(target, {
   seed = 0,
   calorieTolerancePerMeal = 35,
   proteinTolerancePerMeal = 4,
+  candidateFilter = null,
+  candidateScore = null,
 } = {}) {
   const calories = positive(target?.calories, 'target.calories');
   const protein = positive(target?.protein, 'target.protein');
@@ -33,8 +35,9 @@ export function planDailyNutrition(target, {
   const plannedMeals = [];
 
   for (const [slotIndex, slot] of slots.entries()) {
-    const candidates = mealsForSlot(slot, { diet });
-    if (!candidates.length) throw new Error(`No retained ${diet} meals for ${slot}`);
+    let candidates = mealsForSlot(slot, { diet });
+    if (typeof candidateFilter === 'function') candidates = candidates.filter(candidateFilter);
+    if (!candidates.length) throw new Error(`No retained ${diet} meals for ${slot} after personalization filters`);
 
     const mealTarget = {
       calories: calories * split[slot].calories,
@@ -43,8 +46,9 @@ export function planDailyNutrition(target, {
 
     const ordered = candidates.map((candidate, index) => ({
       candidate,
+      preference: typeof candidateScore === 'function' ? Number(candidateScore(candidate) ?? 0) : 0,
       order: (index - (seed + slotIndex)) % candidates.length,
-    })).sort((a, b) => a.order - b.order).map(({ candidate }) => candidate);
+    })).sort((a, b) => b.preference - a.preference || a.order - b.order).map(({ candidate }) => candidate);
 
     let best = null;
     for (const template of ordered) {
@@ -53,9 +57,10 @@ export function planDailyNutrition(target, {
         calorieTolerance: calorieTolerancePerMeal,
         proteinTolerance: proteinTolerancePerMeal,
       });
-      const scored = { slot, template, target: mealTarget, ...result, score: scoreResult(result, mealTarget) };
+      const preferenceBonus = typeof candidateScore === 'function' ? Number(candidateScore(template) ?? 0) : 0;
+      const scored = { slot, template, target: mealTarget, ...result, score: scoreResult(result, mealTarget) - preferenceBonus * 5 };
       if (!best || scored.score < best.score) best = scored;
-      if (result.withinTolerance) break;
+      if (result.withinTolerance && preferenceBonus >= 0) break;
     }
     plannedMeals.push(best);
   }
