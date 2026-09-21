@@ -31,6 +31,9 @@ jobs:
       - name: Enforce section 4 training contract
         run: node pump3/tests/section4-training-engine.test.mjs
 
+      - name: Require bilingual fallback instructions for every exercise
+        run: node pump3/tests/exercise-instructions.test.mjs
+
       - name: Enforce exercise media quality policy
         run: node pump3/tests/exercise-media-policy.test.mjs
 
