@@ -1,25 +1,3 @@
-const NAV = [
-  ['today', 'היום'],
-  ['nutrition', 'תזונה'],
-  ['training', 'כושר'],
-  ['progress', 'שקילות'],
-];
-
-export function Header({ profile }) {
-  return (
-    <header className="topbar">
-      <div className="brand" aria-label="PUMP"><span className="brand-mark">♥</span><b>PUMP</b></div>
-      <div className="profile-chip"><span className="profile-dot" />{profile.id === 'pump3-demo-user' ? 'מצב פיתוח' : 'פרופיל'}</div>
-    </header>
-  );
-}
-
-export function BottomNav({ active, onChange }) {
-  return (
-    <nav className="bottom-nav" aria-label="ניווט ראשי">
-      {NAV.map(([id, label]) => (
-        <button key={id} className={active === id ? 'active' : ''} onClick={() => onChange(id)}>{label}</button>
-      ))}
-    </nav>
-  );
-}
+const NAV = [['today','היום'],['nutrition','תזונה'],['training','כושר'],['camera','צילום אוכל'],['progress','שקילות'],['account','חשבון']];
+export function Header({ profile }) { return <header className="topbar"><div className="brand" aria-label="PUMP"><span className="brand-mark">♥</span><b>PUMP</b></div><div className="profile-chip"><span className="profile-dot" />{profile.id === 'pump3-demo-user' ? 'מצב פיתוח' : 'מחובר'}</div></header>; }
+export function BottomNav({ active, onChange }) { return <nav className="bottom-nav" aria-label="ניווט ראשי">{NAV.map(([id,label]) => <button key={id} className={active===id?'active':''} onClick={()=>onChange(id)}>{label}</button>)}</nav>; }
