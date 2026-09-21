@@ -20,8 +20,15 @@ const rows = Object.freeze({
 
 export const OFFICIAL_FOODS_V2 = Object.freeze([
   foodFromIsraelMohRow(rows.cottage5, { id: 'cottage-5', state: 'ready', aliases: ['קוטג׳ 5%', "קוטג' 5%"] }),
-  foodFromIsraelMohRow(rows.whiteCheese5, { id: 'white-cheese-5', state: 'ready', aliases: ['גבינה לבנה 5%'] }),
-  foodFromIsraelMohRow(rows.vegetableSaladNoOil, { id: 'israeli-salad-no-oil', state: 'prepared', aliases: ['סלט ירקות', 'סלט קצוץ', 'ירקות קצוצים'] }),
+  // PUMP 2 used the bare label "גבינה 5%" only in meals whose title describes
+  // plain cheese. Canonicalize it to white cheese instead of keeping an
+  // uncomputable generic dairy placeholder.
+  foodFromIsraelMohRow(rows.whiteCheese5, { id: 'white-cheese-5', state: 'ready', aliases: ['גבינה לבנה 5%', 'גבינה 5%'] }),
+  // Legacy "ירקות" / "סלט גדול" / "עגבנייה ומלפפון" are non-scalable side
+  // salads in the meal catalogue. PUMP 3 gives that side a single explicit
+  // definition: Israeli chopped salad, no added oil. Oil remains a separate
+  // ingredient whenever a meal calls for it, preventing hidden calories.
+  foodFromIsraelMohRow(rows.vegetableSaladNoOil, { id: 'israeli-salad-no-oil', state: 'prepared', aliases: ['סלט ירקות', 'סלט קצוץ', 'ירקות קצוצים', 'ירקות', 'סלט גדול', 'עגבנייה ומלפפון'] }),
   foodFromIsraelMohRow(rows.yellowCheese9, { id: 'yellow-cheese-9', state: 'ready', aliases: ['גבינה צהובה 9%'] }),
   foodFromIsraelMohRow(rows.oatsRaw, { id: 'oats-raw', state: 'raw', aliases: ['שיבולת שועל'] }),
   foodFromIsraelMohRow(rows.bulgarianCheese5, { id: 'bulgarian-cheese-5', state: 'ready', aliases: ['גבינה בולגרית 5%'] }),
