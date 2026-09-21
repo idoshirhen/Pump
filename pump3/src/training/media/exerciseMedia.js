@@ -42,11 +42,11 @@ export function getExerciseMedia(exerciseId, sex, { allowUnapproved = false } = 
   if (quality === 'missing') return null;
   if (!allowUnapproved && quality !== 'approved') return null;
 
-  const folder = normalizedSex === 'male' ? 'exercises-male' : 'exercises';
+  const folder = normalizedSex === 'male' ? 'male' : 'female';
   return Object.freeze({
     exerciseId,
     sex: normalizedSex,
-    src: `/Pump/assets/${folder}/${exerciseId}.webp`,
+    src: `/Pump/exercises/${folder}/${exerciseId}.webp`,
     quality,
     sourceKind: quality === 'approved' ? 'approved-production' : 'legacy-ai-frame-sequence',
     altHe: `${exercise.names.he} – הדגמת תנועה`,
