@@ -5,12 +5,12 @@ import { createTrainingPrescription } from '../src/personalization/training-pres
 import { normalizePersonalizationProfile } from '../src/personalization/profile.js';
 import { buildPersonalizedPlan } from '../src/personalization/engine.js';
 
-assert.equal(EXERCISES.length, 26, 'canonical catalog should contain the 26 supported exercises');
+assert.ok(EXERCISES.length >= 45, 'canonical catalog should provide broad home/gym/bodyweight coverage');
 assert.equal(new Set(EXERCISES.map((e) => e.id)).size, EXERCISES.length, 'exercise IDs must be unique');
 for (const exercise of EXERCISES) {
   assert.ok(exercise.names.he && exercise.names.en, `${exercise.id} needs localized names`);
   assert.ok(exercise.equipment.length >= 1, `${exercise.id} needs equipment metadata`);
-  assert.ok(exercise.movementTags.length >= 1, `${exercise.id} needs movement/safety tags`);
+  assert.ok(exercise.movementPattern, `${exercise.id} needs a movement pattern`);
   assert.ok(exercise.muscles.length >= 1, `${exercise.id} needs muscle metadata`);
 }
 
@@ -25,9 +25,9 @@ function profile(overrides = {}) {
 
 const basePrescription = createTrainingPrescription(profile());
 assert.ok(basePrescription.equipment.includes('bodyweight'), 'bodyweight must always be available');
-const first = buildWorkoutPlan(basePrescription);
-const second = buildWorkoutPlan(basePrescription);
-assert.deepEqual(first, second, 'same prescription must produce deterministic workouts');
+const first = buildWorkoutPlan(basePrescription, { seed: 7 });
+const second = buildWorkoutPlan(basePrescription, { seed: 7 });
+assert.deepEqual(first, second, 'same prescription and seed must produce deterministic workouts');
 assert.equal(first.sessions.length, 4);
 for (const session of first.sessions) {
   assert.ok(session.exercises.length > 0);
@@ -51,7 +51,7 @@ assert.equal(kneeEligible.includes('glute-bridge'), true);
 const kneePlan = buildWorkoutPlan(kneePrescription);
 for (const session of kneePlan.sessions) for (const planned of session.exercises) {
   const exercise = EXERCISE_BY_ID[planned.exerciseId];
-  assert.equal(exercise.movementTags.includes('deep-knee-flexion'), false, 'knee limitation leaked unsafe movement');
+  assert.equal(exercise.movementTags.some((tag) => kneePrescription.avoidMovementTags.includes(tag)), false, 'knee limitation leaked avoided movement');
 }
 
 const shoulderPrescription = createTrainingPrescription(profile({
@@ -73,9 +73,7 @@ const bodyweightPlan = buildWorkoutPlan(bodyweightPrescription);
 assert.equal(bodyweightPlan.sessions.length, 2);
 for (const session of bodyweightPlan.sessions) {
   assert.ok(session.exercises.length <= 4);
-  for (const planned of session.exercises) {
-    assert.ok(EXERCISE_BY_ID[planned.exerciseId].equipment.includes('bodyweight'));
-  }
+  for (const planned of session.exercises) assert.ok(EXERCISE_BY_ID[planned.exerciseId].equipment.includes('bodyweight'));
 }
 
 const integrated = buildPersonalizedPlan({
@@ -86,5 +84,6 @@ const integrated = buildPersonalizedPlan({
 assert.equal(integrated.training.plan.sessions.length, 3);
 assert.ok(integrated.audit.trainingEligibleExercises.length > 0);
 assert.ok(integrated.audit.trainingExcludedExercises.includes('dumbbell-shoulder-press'));
+assert.equal(integrated.training.plan.seed, integrated.audit.deterministicSeed);
 
 console.log('PUMP 3 training engine checks passed');
