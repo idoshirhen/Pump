@@ -40,6 +40,9 @@ jobs:
       - name: Check combined verified canonical food library
         run: node pump3/tests/canonical-foods.test.mjs
 
+      - name: Enforce section 2 verification progress
+        run: node pump3/tests/section2-progress.test.mjs
+
       - name: Check deterministic meal targeting
         run: node pump3/tests/meal-targeting.test.mjs
 
