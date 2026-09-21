@@ -12,13 +12,13 @@ export function calculatePersonalizedTargets(profile) {
   const maintenanceCalories = bmr * ACTIVITY_MULTIPLIER[profile.activity];
   const rawCalories = maintenanceCalories * GOAL_MULTIPLIER[profile.goal];
   const calories = roundTo(rawCalories, 10);
-  const protein = roundTo(profile.weightKg * PROTEIN_PER_KG[profile.goal], 1);
+  const protein = roundTo(profile.weightKg * PROTEIN_PER_KG[profile.goal], 0.1);
   const calorieAdjustment = calories - roundTo(maintenanceCalories, 10);
 
   return Object.freeze({
     calories,
     protein,
-    bmr: roundTo(bmr, 1),
+    bmr: roundTo(bmr, 0.1),
     maintenanceCalories: roundTo(maintenanceCalories, 10),
     calorieAdjustment,
     method: Object.freeze({
@@ -28,7 +28,7 @@ export function calculatePersonalizedTargets(profile) {
       proteinGramsPerKg: PROTEIN_PER_KG[profile.goal],
     }),
     audit: Object.freeze([
-      `BMR ${roundTo(bmr, 1)} kcal/day from sex, age, height and weight`,
+      `BMR ${roundTo(bmr, 0.1)} kcal/day from sex, age, height and weight`,
       `Activity ${profile.activity} x${ACTIVITY_MULTIPLIER[profile.activity]} => maintenance ${roundTo(maintenanceCalories, 10)} kcal/day`,
       `Goal ${profile.goal} x${GOAL_MULTIPLIER[profile.goal]} => target ${calories} kcal/day`,
       `Protein ${PROTEIN_PER_KG[profile.goal]} g/kg x ${profile.weightKg} kg => ${protein} g/day`,
