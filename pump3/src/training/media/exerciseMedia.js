@@ -1,5 +1,15 @@
 import { EXERCISE_BY_ID } from '../data/exercise-catalog.js';
 
+// Only these legacy IDs have physical WebP files today. New canonical exercises
+// are missing by default until a real asset is added and audited.
+const LEGACY_AVAILABLE = new Set([
+  'squat','leg-press','glute-bridge','lateral-band-walk','push-up','incline-push-up','wall-press',
+  'band-chest-press','dumbbell-floor-press','chest-press-machine','bench-dips','one-arm-dumbbell-row',
+  'resistance-band-row','seated-cable-row','lat-pulldown','seated-scapular-retraction',
+  'gentle-scapular-retraction','prone-ytw','dumbbell-shoulder-press','dumbbell-lateral-raise',
+  'bodyweight-lateral-raise','dumbbell-biceps-curl','hammer-curl','overhead-triceps-extension','plank','dead-bug',
+]);
+
 const QUALITY = Object.freeze({
   'band-chest-press': { female: 'missing', male: 'review' },
   'seated-scapular-retraction': { female: 'replace', male: 'replace' },
@@ -15,7 +25,7 @@ export function getExerciseById(exerciseId) {
 }
 
 export function exerciseMediaQuality(exerciseId, sex) {
-  if (!getExerciseById(exerciseId)) return 'missing';
+  if (!getExerciseById(exerciseId) || !LEGACY_AVAILABLE.has(exerciseId)) return 'missing';
   const normalizedSex = normalizeExerciseSex(sex);
   return QUALITY[exerciseId]?.[normalizedSex] ?? 'review';
 }
@@ -50,3 +60,5 @@ export function getExerciseMediaAudit() {
     male: exerciseMediaQuality(exerciseId, 'male'),
   })));
 }
+
+export { LEGACY_AVAILABLE };
