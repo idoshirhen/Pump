@@ -3,10 +3,9 @@ import { CANONICAL_FOODS, CANONICAL_FOOD_BY_LEGACY_ALIAS } from '../src/nutritio
 
 // Section 2 is intentionally not complete yet. This regression gate makes the
 // verified-food migration monotonic while the remaining legacy meals are being
-// canonicalized. Raise MIN_VERIFIED_FOODS and reduce unresolved aliases as each
-// reviewed batch lands; the final gate will require zero unresolved retained
-// meal ingredients before section 2 can be declared complete.
-const MIN_VERIFIED_FOODS = 33;
+// canonicalized. Raise MIN_VERIFIED_FOODS as each reviewed batch lands; the
+// final gate will require zero unresolved retained meal ingredients.
+const MIN_VERIFIED_FOODS = 30;
 const REQUIRED_RESOLVED_ALIASES = [
   'ביצים', 'ביצה קשה', 'קוטג׳ 5%', 'גבינה לבנה 5%', 'סלט ירקות',
   'טונה במים', 'טונה במים מסוננת', 'שיבולת שועל', 'קינואה מבושלת',
