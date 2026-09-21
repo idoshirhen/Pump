@@ -15,10 +15,17 @@ function stableSeed(input) {
   return Math.abs(hash >>> 0);
 }
 
+function plannerDiet(profile) {
+  // Vegan meals are valid vegetarian meals. The legacy meal helper excludes
+  // vegan-tagged rows from its vegetarian bucket, so PUMP 3 starts from the
+  // omnivore candidate pool and applies the stricter profile filter itself.
+  return profile.diet === 'vegetarian' ? 'omnivore' : profile.diet;
+}
+
 function nutritionCoverage(profile, feedback) {
   const slots = ['breakfast', 'lunch', 'dinner', 'snack'];
   const eligibleBySlot = Object.fromEntries(slots.map((slot) => {
-    const eligible = mealsForSlot(slot, { diet: profile.diet })
+    const eligible = mealsForSlot(slot, { diet: plannerDiet(profile) })
       .filter((template) => mealAllowedForProfile(template, profile, feedback));
     return [slot, eligible.map((template) => template.id)];
   }));
@@ -35,7 +42,7 @@ export function buildPersonalizedPlan(input, { dateKey = 'default' } = {}) {
 
   const nutrition = coverage.supported
     ? { status: 'ready', ...planDailyNutrition(targets, {
-      diet: profile.diet,
+      diet: plannerDiet(profile),
       seed,
       candidateFilter: (template) => mealAllowedForProfile(template, profile, feedback),
       candidateScore: (template) => scoreMealForProfile(template, profile, feedback),
