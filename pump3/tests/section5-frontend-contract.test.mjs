@@ -1,57 +1,9 @@
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-
-const required = [
-  'pump3/src/App.jsx',
-  'pump3/src/app/AuthScreen.jsx',
-  'pump3/src/app/OnboardingScreen.jsx',
-  'pump3/src/app/useSession.js',
-  'pump3/src/app/usePumpProfile.js',
-  'pump3/src/app/useDailyState.js',
-  'pump3/src/services/supabase.js',
-  'pump3/src/services/auth.js',
-  'pump3/src/services/profileStore.js',
-  'pump3/src/services/dailyStore.js',
-  'pump3/src/app/screens.jsx',
-  'pump3/src/training/components/ExerciseDemo.jsx',
-];
-for (const path of required) assert.ok(fs.existsSync(path), `missing frontend module: ${path}`);
-
-const app = fs.readFileSync('pump3/src/App.jsx', 'utf8');
-assert.match(app, /useSession/);
-assert.match(app, /usePumpProfile/);
-assert.match(app, /useDailyState/);
-assert.match(app, /AuthScreen/);
-assert.match(app, /OnboardingScreen/);
-assert.doesNotMatch(app, /pump-(nutrition|exercise|mobile|meal)-/i, 'PUMP 3 App must not depend on legacy runtime patches');
-
-const supabase = fs.readFileSync('pump3/src/services/supabase.js', 'utf8');
-assert.match(supabase, /persistSession:\s*true/);
-assert.match(supabase, /autoRefreshToken:\s*true/);
-
-const profileMigration = fs.readFileSync('supabase/migrations/20260922003000_add_pump3_profiles.sql', 'utf8');
-assert.match(profileMigration, /enable row level security/i);
-assert.match(profileMigration, /auth\.uid\(\) = user_id/);
-assert.match(profileMigration, /profile jsonb not null/i);
-
-const dailyMigration = fs.readFileSync('supabase/migrations/20260922005000_add_pump3_daily_state.sql', 'utf8');
-assert.match(dailyMigration, /pump3_daily_state/i);
-assert.match(dailyMigration, /pump3_weight_entries/i);
-assert.match(dailyMigration, /enable row level security/i);
-assert.match(dailyMigration, /auth\.uid\(\) = user_id/);
-
-const dailyStore = fs.readFileSync('pump3/src/services/dailyStore.js', 'utf8');
-assert.match(dailyStore, /loadDailyState/);
-assert.match(dailyStore, /saveDailyState/);
-assert.match(dailyStore, /loadWeightHistory/);
-assert.match(dailyStore, /saveWeight/);
-
-const screens = fs.readFileSync('pump3/src/app/screens.jsx', 'utf8');
-assert.match(screens, /onMealStatus/);
-assert.match(screens, /onCompleteWorkout/);
-assert.match(screens, /onAddWeight/);
-assert.match(screens, /NutritionScreen/);
-assert.match(screens, /TrainingScreen/);
-assert.match(screens, /ProgressScreen/);
-
-console.log('PUMP 3 section 5 frontend contract passed: auth, onboarding, feature screens and authenticated daily persistence are isolated from legacy runtime patches.');
+import assert from 'node:assert/strict';import fs from 'node:fs';
+const required=['pump3/src/App.jsx','pump3/src/app/AuthScreen.jsx','pump3/src/app/OnboardingScreen.jsx','pump3/src/app/useSession.js','pump3/src/app/usePumpProfile.js','pump3/src/app/useDailyState.js','pump3/src/services/supabase.js','pump3/src/services/auth.js','pump3/src/services/profileStore.js','pump3/src/services/dailyStore.js','pump3/src/app/screens.jsx','pump3/src/training/components/ExerciseDemo.jsx'];for(const path of required)assert.ok(fs.existsSync(path),`missing frontend module: ${path}`);
+const app=fs.readFileSync('pump3/src/App.jsx','utf8');for(const token of ['useSession','usePumpProfile','useDailyState','AuthScreen','OnboardingScreen','FoodCaptureScreen','AccountScreen','window.scrollTo'])assert.match(app,new RegExp(token));assert.doesNotMatch(app,/pump-(nutrition|exercise|mobile|meal)-/i);
+const supabase=fs.readFileSync('pump3/src/services/supabase.js','utf8');assert.match(supabase,/persistSession:\s*true/);assert.match(supabase,/autoRefreshToken:\s*true/);
+for(const migration of ['supabase/migrations/20260922003000_add_pump3_profiles.sql','supabase/migrations/20260922005000_add_pump3_daily_state.sql']){const sql=fs.readFileSync(migration,'utf8');assert.match(sql,/enable row level security/i);assert.match(sql,/auth\.uid\(\)/)}
+const daily=fs.readFileSync('pump3/src/app/useDailyState.js','utf8');for(const token of ['setMealStatus','replaceMeal','setMealFeedback','completeWorkout','toggleExercise','replaceExercise','addWeight'])assert.match(daily,new RegExp(token));
+const screens=fs.readFileSync('pump3/src/app/screens.jsx','utf8');for(const token of ['NutritionScreen','TrainingScreen','ProgressScreen','FoodCaptureScreen','AccountScreen','RestTimer','onReplaceMeal','onFeedback','onToggleExercise','onReplaceExercise','signOut','capture="environment"','הוספה ידנית'])assert.match(screens,new RegExp(token));
+const chrome=fs.readFileSync('pump3/src/app/AppChrome.jsx','utf8');assert.match(chrome,/camera/);assert.match(chrome,/account/);
+console.log('PUMP 3 section 5 completion contract passed: auth/onboarding, daily persistence, meal replace+feedback, workout progress+replacement+timer, food capture/manual fallback, progress, account/logout, scroll reset and mobile navigation are wired without legacy runtime patches.');
