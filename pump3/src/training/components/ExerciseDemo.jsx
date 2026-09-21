@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { getExerciseMedia } from '../media/exerciseMedia';
 import './ExerciseDemo.css';
 
-export default function ExerciseDemo({ exerciseId, sex, language = 'he', compact = false }) {
-  const media = useMemo(() => getExerciseMedia(exerciseId, sex), [exerciseId, sex]);
+export default function ExerciseDemo({ exerciseId, sex, language = 'he', compact = false, allowUnapproved = false }) {
+  const media = useMemo(() => getExerciseMedia(exerciseId, sex, { allowUnapproved }), [exerciseId, sex, allowUnapproved]);
   const [failed, setFailed] = useState(false);
 
   if (!media || failed) {
@@ -26,7 +26,7 @@ export default function ExerciseDemo({ exerciseId, sex, language = 'he', compact
         draggable="false"
         onError={() => setFailed(true)}
       />
-      {media.quality !== 'approved' && (
+      {allowUnapproved && media.quality !== 'approved' && (
         <figcaption className="exercise-demo__quality" data-quality={media.quality}>
           {language === 'en' ? 'Media under review' : 'הדגמה בבדיקה'}
         </figcaption>
