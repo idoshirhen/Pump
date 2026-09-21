@@ -25,6 +25,9 @@ jobs:
       - name: Enforce section 5 frontend architecture contract
         run: node pump3/tests/section5-frontend-contract.test.mjs
 
+      - name: Enforce section 6 release readiness contract
+        run: node pump3/tests/section6-release-readiness.test.mjs
+
       - name: Check helper personalization matrix
         run: node scripts/test-personalization-helpers.mjs
 
