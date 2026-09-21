@@ -1,5 +1,10 @@
 import { requireSupabase } from './supabase.js';
 
+function authRedirectUrl() {
+  if (typeof window === 'undefined') return undefined;
+  return `${window.location.origin}/Pump/`;
+}
+
 export async function getCurrentSession() {
   const client = requireSupabase();
   const { data, error } = await client.auth.getSession();
@@ -22,7 +27,11 @@ export async function signInWithPassword(email, password) {
 
 export async function signUpWithPassword(email, password) {
   const client = requireSupabase();
-  const { data, error } = await client.auth.signUp({ email, password });
+  const { data, error } = await client.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: authRedirectUrl() },
+  });
   if (error) throw error;
   return data;
 }
