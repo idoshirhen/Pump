@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { EXERCISES, EXERCISE_BY_ID, alternativesForExercise, exerciseIsSafeForPrescription } from '../src/training/data/exercise-catalog.js';
 import { buildWorkoutPlan, replaceExerciseInPlan } from '../src/training/engine/workout-engine.js';
-import { mediaStatus, approvedMediaForExercise, mediaAudit } from '../src/training/media/media-registry.js';
+import { exerciseMediaQuality, getExerciseMedia, getExerciseMediaAudit } from '../src/training/media/exerciseMedia.js';
 import { createTrainingPrescription } from '../src/personalization/training-prescription.js';
 import { buildPersonalizedPlan } from '../src/personalization/engine.js';
 
@@ -40,7 +40,6 @@ for (const session of bodyweightPlan.sessions) {
   assert.equal(new Set(session.exercises.map((e) => e.exerciseId)).size, session.exercises.length, 'no duplicate exercise inside a session');
   for (const row of session.exercises) {
     const e = EXERCISE_BY_ID[row.exerciseId];
-    assert.ok(e.exerciseIsSafe !== false);
     assert.ok(exerciseIsSafeForPrescription(e, bodyweight));
     assert.ok(row.alternatives.every((id) => EXERCISE_BY_ID[id]), 'alternatives are stable IDs');
   }
@@ -74,10 +73,11 @@ const replaced = replaceExerciseInPlan(gymPlanA, 0, firstExercise.exerciseId, re
 assert.ok(replaced.sessions[0].exercises.some((row) => row.exerciseId === replacement), 'replacement must use canonical ID');
 assert.ok(alternativesForExercise(firstExercise.exerciseId, gym).some((e) => e.id === replacement));
 
-assert.equal(mediaStatus('band-chest-press', 'female').quality, 'missing');
-assert.equal(mediaStatus('seated-scapular-retraction', 'male').quality, 'replace');
-assert.equal(approvedMediaForExercise('squat', 'female'), null, 'review assets must not silently become production-approved');
-assert.ok(mediaAudit().every((row) => ['approved','review','replace','missing'].includes(row.quality)));
+assert.equal(exerciseMediaQuality('band-chest-press', 'female'), 'missing');
+assert.equal(exerciseMediaQuality('seated-scapular-retraction', 'male'), 'replace');
+assert.equal(getExerciseMedia('squat', 'female'), null, 'review assets must not silently become production-approved');
+assert.equal(exerciseMediaQuality('box-squat', 'female'), 'missing', 'new exercise without an asset must be explicitly missing');
+assert.equal(getExerciseMediaAudit().length, EXERCISES.length, 'every canonical exercise needs an auditable media row');
 
 const personalizedInput = {
   id: 'training-contract-user', sex: 'male', age: 33, heightCm: 172, weightKg: 72, targetWeightKg: 76,
