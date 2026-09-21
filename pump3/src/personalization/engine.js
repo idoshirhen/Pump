@@ -2,6 +2,7 @@ import { normalizePersonalizationProfile } from './profile.js';
 import { calculatePersonalizedTargets } from './targets.js';
 import { buildMealFeedbackModel, mealAllowedForProfile, scoreMealForProfile } from './meal-preferences.js';
 import { createTrainingPrescription } from './training-prescription.js';
+import { buildWorkoutPlan } from '../training/engine/workout-engine.js';
 import { planDailyNutrition } from '../nutrition/engine/day-planner.js';
 import { mealsForSlot } from '../nutrition/data/meal-catalog.js';
 
@@ -16,9 +17,6 @@ function stableSeed(input) {
 }
 
 function plannerDiet(profile) {
-  // Vegan meals are valid vegetarian meals. The legacy meal helper excludes
-  // vegan-tagged rows from its vegetarian bucket, so PUMP 3 starts from the
-  // omnivore candidate pool and applies the stricter profile filter itself.
   return profile.diet === 'vegetarian' ? 'omnivore' : profile.diet;
 }
 
@@ -54,7 +52,9 @@ export function buildPersonalizedPlan(input, { dateKey = 'default' } = {}) {
       eligibleBySlot: Object.freeze(coverage.eligibleBySlot),
     };
 
-  const training = createTrainingPrescription(profile);
+  const trainingPrescription = createTrainingPrescription(profile);
+  const workoutPlan = buildWorkoutPlan(trainingPrescription);
+  const training = Object.freeze({ ...trainingPrescription, plan: workoutPlan });
 
   return Object.freeze({
     profile,
@@ -63,7 +63,9 @@ export function buildPersonalizedPlan(input, { dateKey = 'default' } = {}) {
     training,
     audit: Object.freeze({
       targetRules: targets.audit,
-      trainingRules: training.audit,
+      trainingRules: trainingPrescription.audit,
+      trainingEligibleExercises: workoutPlan.audit.eligibleExerciseIds,
+      trainingExcludedExercises: workoutPlan.audit.excludedExerciseIds,
       excludedMealIds: Object.freeze([...feedback.excludedMealIds]),
       deterministicSeed: seed,
       nutritionCoverage: Object.freeze(coverage.eligibleBySlot),
