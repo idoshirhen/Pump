@@ -1,5 +1,5 @@
 import { EXERCISES, EXERCISE_BY_ID, alternativesForExercise, exerciseIsSafeForPrescription } from '../data/exercise-catalog.js';
-import { mediaStatus } from '../media/media-registry.js';
+import { exerciseMediaQuality, getExerciseMedia, normalizeExerciseSex } from '../media/exerciseMedia.js';
 
 const SLOT_PRIORITIES = Object.freeze({
   'full-body-a': ['legs','chest','back','core','shoulders'],
@@ -75,6 +75,8 @@ function prescriptionForExercise(exercise, prescription) {
 }
 
 function workoutExercise(exercise, prescription, sex) {
+  const normalizedSex = normalizeExerciseSex(sex);
+  const mediaQuality = exerciseMediaQuality(exercise.id, normalizedSex);
   return Object.freeze({
     exerciseId: exercise.id,
     group: exercise.group,
@@ -82,7 +84,11 @@ function workoutExercise(exercise, prescription, sex) {
     names: exercise.names,
     prescription: prescriptionForExercise(exercise, prescription),
     alternatives: Object.freeze(alternativesForExercise(exercise.id, prescription).slice(0, 4).map((entry) => entry.id)),
-    media: mediaStatus(exercise.id, sex),
+    media: Object.freeze({
+      sex: normalizedSex,
+      quality: mediaQuality,
+      approvedAsset: getExerciseMedia(exercise.id, normalizedSex),
+    }),
   });
 }
 
@@ -124,10 +130,7 @@ export function buildWorkoutPlan(prescription, { seed = 0, sex = 'female' } = {}
       }
     }
 
-    if (selected.length < Math.min(3, prescription.maxExercisesPerSession)) {
-      throw new Error(`Not enough safe exercise coverage for session ${slot}`);
-    }
-
+    if (selected.length < Math.min(3, prescription.maxExercisesPerSession)) throw new Error(`Not enough safe exercise coverage for session ${slot}`);
     return Object.freeze({ id: slot, dayIndex: sessionIndex, durationMinutes: prescription.sessionMinutes, exercises: Object.freeze(selected) });
   });
 
