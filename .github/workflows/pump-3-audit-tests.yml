@@ -25,6 +25,12 @@ jobs:
       - name: Enforce section 3 completion contract
         run: node pump3/tests/section3-completion.test.mjs
 
+      - name: Check PUMP 3 workout engine
+        run: node pump3/tests/training-engine.test.mjs
+
+      - name: Enforce exercise media quality policy
+        run: node pump3/tests/exercise-media-policy.test.mjs
+
       - name: Audit exercise media coverage
         run: node scripts/audit-exercise-media.mjs
 
@@ -78,9 +84,3 @@ jobs:
           node --check assets/pump-exercise-coverage-v1.js
           node --check assets/pump-mobile-ui-v1.js
           node --check assets/pump-meal-structure-native-preview.js
-
-      # The old scripts/test-personalization.mjs boots a compiled browser bundle in JSDOM.
-      # It currently times out before onboarding because the production bundle depends on
-      # browser/auth lifecycle behavior JSDOM does not reproduce. Keeping that as a required
-      # gate produced false-red CI, so it is intentionally excluded until replaced by a real
-      # browser E2E suite for PUMP 3.
