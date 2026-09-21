@@ -29,7 +29,7 @@ const legacyPreview = getExerciseMedia('squat','male',{ allowUnapproved: true })
 assert.ok(legacyPreview);
 assert.equal(legacyPreview.quality, 'replace');
 assert.equal(legacyPreview.sourceKind, 'legacy-ai-frame-sequence');
-assert.equal(legacyPreview.src, '/Pump/assets/exercises-male/squat.webp');
+assert.equal(legacyPreview.src, '/Pump/exercises/male/squat.webp');
 assert.match(legacyPreview.altEn, /Squat/);
 
 for (const id of LEGACY_AVAILABLE) {
