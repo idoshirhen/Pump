@@ -19,6 +19,9 @@ jobs:
       - name: Check helper personalization matrix
         run: node scripts/test-personalization-helpers.mjs
 
+      - name: Check PUMP 3 personalization engine
+        run: node pump3/tests/personalization-engine.test.mjs
+
       - name: Audit exercise media coverage
         run: node scripts/audit-exercise-media.mjs
 
