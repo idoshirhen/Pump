@@ -1,7 +1,7 @@
 const LIMITATION_RULES = Object.freeze({
   none: { avoidMovementTags: [], note: null },
   knee: { avoidMovementTags: ['deep-knee-flexion', 'impact', 'jumping'], note: 'Prefer pain-free range and lower-impact lower-body work.' },
-  shoulder: { avoidMovementTags: ['overhead-heavy', 'deep-dip', 'painful-press'], note: 'Prefer pain-free pressing angles and controlled scapular work.' },
+  shoulder: { avoidMovementTags: ['overhead-heavy', 'deep-dip', 'shoulder-demanding'], note: 'Prefer pain-free pressing angles and controlled scapular work.' },
   back: { avoidMovementTags: ['heavy-spinal-loading', 'loaded-flexion'], note: 'Prefer supported variations and neutral-spine control.' },
 });
 
@@ -38,9 +38,11 @@ export function createTrainingPrescription(profile) {
   const limitation = LIMITATION_RULES[profile.limitation];
   const level = LEVEL_RULES[profile.trainingLevel];
   const equipment = new Set(profile.equipment);
+  // Bodyweight is always available in every environment; gym equipment is only
+  // added for gym users. This prevents a home user with dumbbells from losing
+  // push-ups/core work simply because the onboarding array omitted bodyweight.
+  equipment.add('bodyweight');
   if (profile.trainingPlace === 'gym') equipment.add('gym');
-  if (profile.trainingPlace === 'bodyweight') equipment.add('bodyweight');
-  if (!equipment.size) equipment.add('bodyweight');
 
   return Object.freeze({
     daysPerWeek: profile.trainingDays,
@@ -48,6 +50,7 @@ export function createTrainingPrescription(profile) {
     split: Object.freeze(splitFor(profile.trainingDays, profile.trainingFocus)),
     focus: profile.trainingFocus,
     place: profile.trainingPlace,
+    level: profile.trainingLevel,
     equipment: Object.freeze([...equipment]),
     maxExercisesPerSession: maxExercisesFor(profile.sessionMinutes),
     defaultSets: level.defaultSets,
