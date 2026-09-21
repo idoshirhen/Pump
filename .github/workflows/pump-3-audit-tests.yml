@@ -46,6 +46,9 @@ jobs:
       - name: Check deterministic meal targeting
         run: node pump3/tests/meal-targeting.test.mjs
 
+      - name: Enforce section 2 completion contract
+        run: node pump3/tests/section2-completion.test.mjs
+
       - name: Audit meal coverage using verified nutrition only
         run: node scripts/audit-pump3-meal-verification.mjs
 
