@@ -16,6 +16,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Install PUMP 3 frontend dependencies
+        run: npm install --prefix pump3 --no-audit --no-fund
+
+      - name: Build PUMP 3 frontend
+        run: npm --prefix pump3 run build
+
       - name: Check helper personalization matrix
         run: node scripts/test-personalization-helpers.mjs
 
