@@ -1,7 +1,9 @@
 import { EXERCISE_BY_ID } from '../data/exercise-catalog.js';
 
-// Only these legacy IDs have physical WebP files today. New canonical exercises
-// are missing by default until a real asset is added and audited.
+// Legacy PUMP 2 WebPs were assembled from short AI frame sequences. They remain
+// available only for internal review/reference. None are production-approved in
+// PUMP 3 until replaced by a coherent source animation/video and explicitly
+// promoted to APPROVED below.
 const LEGACY_AVAILABLE = new Set([
   'squat','leg-press','glute-bridge','lateral-band-walk','push-up','incline-push-up','wall-press',
   'band-chest-press','dumbbell-floor-press','chest-press-machine','bench-dips','one-arm-dumbbell-row',
@@ -10,10 +12,9 @@ const LEGACY_AVAILABLE = new Set([
   'bodyweight-lateral-raise','dumbbell-biceps-curl','hammer-curl','overhead-triceps-extension','plank','dead-bug',
 ]);
 
-const QUALITY = Object.freeze({
-  'band-chest-press': { female: 'missing', male: 'review' },
-  'seated-scapular-retraction': { female: 'replace', male: 'replace' },
-  'gentle-scapular-retraction': { female: 'replace', male: 'replace' },
+const APPROVED = Object.freeze({});
+const KNOWN_MISSING = Object.freeze({
+  'band-chest-press': new Set(['female']),
 });
 
 export function normalizeExerciseSex(value) {
@@ -25,9 +26,12 @@ export function getExerciseById(exerciseId) {
 }
 
 export function exerciseMediaQuality(exerciseId, sex) {
-  if (!getExerciseById(exerciseId) || !LEGACY_AVAILABLE.has(exerciseId)) return 'missing';
+  if (!getExerciseById(exerciseId)) return 'missing';
   const normalizedSex = normalizeExerciseSex(sex);
-  return QUALITY[exerciseId]?.[normalizedSex] ?? 'review';
+  if (KNOWN_MISSING[exerciseId]?.has(normalizedSex)) return 'missing';
+  if (!LEGACY_AVAILABLE.has(exerciseId)) return 'missing';
+  if (APPROVED[exerciseId]?.includes(normalizedSex)) return 'approved';
+  return 'replace';
 }
 
 export function getExerciseMedia(exerciseId, sex, { allowUnapproved = false } = {}) {
@@ -44,6 +48,7 @@ export function getExerciseMedia(exerciseId, sex, { allowUnapproved = false } = 
     sex: normalizedSex,
     src: `/Pump/assets/${folder}/${exerciseId}.webp`,
     quality,
+    sourceKind: quality === 'approved' ? 'approved-production' : 'legacy-ai-frame-sequence',
     altHe: `${exercise.names.he} – הדגמת תנועה`,
     altEn: `${exercise.names.en} – movement demo`,
   });
@@ -61,4 +66,11 @@ export function getExerciseMediaAudit() {
   })));
 }
 
-export { LEGACY_AVAILABLE };
+export const MEDIA_POLICY = Object.freeze({
+  productionRequires: 'approved',
+  legacyDefault: 'replace',
+  missingFallback: 'text-instructions',
+  approvalRequirement: 'coherent-source-motion-reviewed-for-form-and-continuity',
+});
+
+export { LEGACY_AVAILABLE, APPROVED };
