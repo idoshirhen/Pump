@@ -24,13 +24,43 @@
   width: 68px;
 }
 
-.exercise-demo--empty {
+.exercise-demo--fallback {
+  width: min(100%, 320px);
   min-height: 112px;
-  padding: 8px;
+  aspect-ratio: auto;
+  place-items: stretch;
+  align-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  color: rgba(255, 255, 255, 0.92);
+  text-align: start;
+}
+
+.exercise-demo--fallback.exercise-demo--compact {
+  width: min(100%, 250px);
+  min-height: 96px;
+  padding: 10px 12px;
+}
+
+.exercise-demo__fallback-title {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.exercise-demo__cues {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-inline-start: 18px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.exercise-demo__unavailable {
   color: rgba(255, 255, 255, 0.55);
   font-size: 11px;
-  line-height: 1.25;
-  text-align: center;
 }
 
 .exercise-demo__quality {
@@ -48,11 +78,11 @@
 }
 
 @media (max-width: 420px) {
-  .exercise-demo {
+  .exercise-demo:not(.exercise-demo--fallback) {
     width: 72px;
   }
 
-  .exercise-demo--compact {
+  .exercise-demo:not(.exercise-demo--fallback).exercise-demo--compact {
     width: 62px;
   }
 }
