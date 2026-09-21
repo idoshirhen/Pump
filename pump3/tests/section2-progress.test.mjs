@@ -3,15 +3,17 @@ import { CANONICAL_FOODS, CANONICAL_FOOD_BY_LEGACY_ALIAS } from '../src/nutritio
 
 // Section 2 is intentionally not complete yet. This regression gate makes the
 // verified-food migration monotonic while the remaining legacy meals are being
-// canonicalized. Raise MIN_VERIFIED_FOODS and reduce MAX_UNRESOLVED_ALIASES as
-// each reviewed batch lands; the final gate will require zero unresolved meal
-// ingredients before section 2 can be declared complete.
-const MIN_VERIFIED_FOODS = 29;
+// canonicalized. Raise MIN_VERIFIED_FOODS and reduce unresolved aliases as each
+// reviewed batch lands; the final gate will require zero unresolved retained
+// meal ingredients before section 2 can be declared complete.
+const MIN_VERIFIED_FOODS = 33;
 const REQUIRED_RESOLVED_ALIASES = [
   'ביצים', 'ביצה קשה', 'קוטג׳ 5%', 'גבינה לבנה 5%', 'סלט ירקות',
   'טונה במים', 'טונה במים מסוננת', 'שיבולת שועל', 'קינואה מבושלת',
   'בורגול מבושל', 'רוטב עגבניות', 'קוסקוס מבושל', 'פסטה מבושלת',
   'שמן זית', 'שמן שומשום', 'חמאת בוטנים', 'סלמון אפוי',
+  'אורז מבושל', 'חומוס מבושל', 'טופו', 'טופו מפורר', 'טופו צרוב',
+  'תפוח אדמה אפוי', 'תפוחי אדמה אפויים',
 ];
 
 assert.ok(CANONICAL_FOODS.length >= MIN_VERIFIED_FOODS,
