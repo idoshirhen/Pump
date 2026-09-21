@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { CANONICAL_FOODS, CANONICAL_FOOD_BY_ID, CANONICAL_FOOD_BY_LEGACY_ALIAS } from '../src/nutrition/data/canonical-foods.js';
 import { createFoodRegistry, assertPlanningReady } from '../src/nutrition/data/food-registry.js';
 
-assert.ok(CANONICAL_FOODS.length >= 36, 'canonical food library unexpectedly shrank');
+// Do not assert an arbitrary historical batch size here: superseding duplicate
+// source rows can legitimately make the canonical library smaller. The useful
+// regression contract is that every canonical ID/alias is unique, verified and
+// planning-ready, and that the legacy staples required by the meal catalogue
+// continue to resolve deterministically.
+assert.ok(CANONICAL_FOODS.length > 0, 'canonical food library must not be empty');
 const registry = createFoodRegistry(CANONICAL_FOODS);
 assert.equal(registry.size(), CANONICAL_FOODS.length, 'canonical food IDs must be unique');
 
@@ -11,12 +16,19 @@ const allowedProviders = new Set([
   'usda-fooddata-central',
 ]);
 
+const seenAliases = new Map();
 for (const food of CANONICAL_FOODS) {
   assert.equal(food.source.status, 'verified');
   assert.ok(allowedProviders.has(food.source.provider), `unapproved source provider for ${food.id}: ${food.source.provider}`);
   assert.ok(food.source.sourceCode, `missing source code for ${food.id}`);
   assertPlanningReady(food);
   assert.equal(CANONICAL_FOOD_BY_ID[food.id], food);
+
+  for (const alias of [food.name, ...(food.aliases ?? [])]) {
+    const prior = seenAliases.get(alias);
+    assert.ok(!prior || prior === food.id, `canonical alias collision for ${alias}: ${prior} vs ${food.id}`);
+    seenAliases.set(alias, food.id);
+  }
 }
 
 const requiredAliases = {
@@ -42,6 +54,7 @@ const requiredAliases = {
   'חומוס מבושל': 'chickpeas-cooked',
   'עדשים מבושלות': 'lentils-cooked',
   'תירס': 'corn-sweet-cooked',
+  'פסטה מבושלת': 'pasta-cooked',
 };
 
 for (const [alias, id] of Object.entries(requiredAliases)) {
