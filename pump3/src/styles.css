@@ -52,12 +52,17 @@ p { color: var(--muted); line-height: 1.45; }
 .screen-heading h1 { margin-bottom: 5px; }
 .nutrition-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .meal-list { display: grid; gap: 12px; margin-top: 14px; }
-.meal-card { padding: 18px; }
+.meal-card { padding: 18px; transition: border-color .18s ease, background .18s ease; }
+.meal-card.is-complete { border-color: rgba(54,211,126,.45); background: linear-gradient(145deg,rgba(54,211,126,.08),#121215); }
 .meal-top { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
 .meal-top strong { color: var(--orange); direction: ltr; unicode-bidi: isolate; }
 .meal-card h2 { margin-top: 10px; }
 .meal-card p { margin-bottom: 12px; font-size: 13px; }
 .meal-items { display: flex; flex-wrap: wrap; gap: 6px; direction: ltr; }
+.primary-action { width: 100%; min-height: 46px; margin-top: 14px; border: 0; border-radius: 14px; color: #111; background: var(--orange); font-weight: 800; }
+.primary-action.complete { color: #09150f; background: var(--green); }
+.primary-action:disabled { opacity: .65; cursor: default; }
+.workout-complete { margin-top: 16px; }
 .session-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 11px; scrollbar-width: none; }
 .session-tabs::-webkit-scrollbar { display: none; }
 .session-tabs button { flex: 0 0 auto; padding: 9px 13px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); background: #151518; }
@@ -70,11 +75,17 @@ p { color: var(--muted); line-height: 1.45; }
 .weight-hero { display: flex; flex-direction: column; align-items: center; padding: 34px 20px; text-align: center; }
 .weight-hero span, .weight-hero small { color: var(--muted); }
 .weight-hero strong { margin: 7px 0; direction: ltr; unicode-bidi: isolate; font-size: 44px; }
+.weight-input-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.weight-input-row input { margin: 0; }
+.weight-input-row .primary-action { width: auto; min-width: 96px; margin: 0; }
+.weight-history { display: grid; gap: 8px; }
+.weight-history div { display: flex; justify-content: space-between; align-items: center; padding: 11px 12px; border-radius: 12px; background: #19191d; }
+.weight-history span { color: var(--muted); font-size: 12px; }
+.weight-history strong { direction: ltr; unicode-bidi: isolate; }
 .muted-card { background: #121215; }
 .bottom-nav { position: fixed; z-index: 30; inset-inline: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; max-width: 720px; margin: 0 auto; padding: 7px; border: 1px solid var(--border); border-radius: 21px; background: rgba(20,20,23,.94); backdrop-filter: blur(18px); box-shadow: 0 12px 40px rgba(0,0,0,.36); }
 .bottom-nav button { min-height: 49px; border: 0; border-radius: 15px; color: #85858e; background: transparent; font-weight: 700; }
 .bottom-nav button.active { color: #111; background: var(--orange); }
-
 .boot-screen, .auth-screen, .onboarding-screen { min-height: 100vh; display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 0, rgba(255,107,0,.16), transparent 35%), var(--bg); }
 .boot-card, .auth-card, .onboarding-card { width: min(100%, 520px); padding: 24px; border: 1px solid var(--border); border-radius: 26px; background: linear-gradient(145deg,#18181c,#101012); box-shadow: 0 30px 80px rgba(0,0,0,.3); }
 .boot-card { text-align: center; }
@@ -101,10 +112,11 @@ p { color: var(--muted); line-height: 1.45; }
 .choice-button.active { border-color: var(--orange); color: #fff; background: rgba(255,107,0,.12); }
 .onboarding-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 .onboarding-actions .primary-button { min-width: 130px; }
-
 @media (max-width: 430px) {
   .form-grid.two { grid-template-columns: 1fr; }
   .choice-grid { grid-template-columns: 1fr; }
+  .weight-input-row { grid-template-columns: 1fr; }
+  .weight-input-row .primary-action { width: 100%; }
 }
 @media (min-width: 700px) {
   .screen { padding-top: 28px; }
