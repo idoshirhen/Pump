@@ -1,0 +1,22 @@
+export const DEMO_PROFILE = Object.freeze({
+  id: 'pump3-demo-user',
+  sex: 'male',
+  age: 33,
+  heightCm: 172,
+  weightKg: 62,
+  targetWeightKg: 65,
+  goal: 'gain',
+  activity: 'medium',
+  trainingLevel: 'intermediate',
+  trainingPlace: 'home',
+  trainingDays: 5,
+  personalization: {
+    foodStyle: 'regular',
+    equipment: ['dumbbells', 'bands'],
+    trainingFocus: 'upper',
+    limitation: 'back',
+    sessionMinutes: 30,
+    favorites: ['chicken', 'rice', 'quick'],
+    avoid: [],
+  },
+});
