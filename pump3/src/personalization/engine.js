@@ -53,7 +53,7 @@ export function buildPersonalizedPlan(input, { dateKey = 'default' } = {}) {
     };
 
   const trainingPrescription = createTrainingPrescription(profile);
-  const workoutPlan = buildWorkoutPlan(trainingPrescription);
+  const workoutPlan = buildWorkoutPlan(trainingPrescription, { seed, sex: profile.sex });
   const training = Object.freeze({ ...trainingPrescription, plan: workoutPlan });
 
   return Object.freeze({
