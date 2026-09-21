@@ -70,13 +70,6 @@ jobs:
       - name: Match ready legacy foods to official Ministry of Health rows
         run: node scripts/fetch-moh-food-candidates.mjs
 
-      - name: Upload official food matching report
-        uses: actions/upload-artifact@v4
-        with:
-          name: pump3-moh-food-matches
-          path: pump3/audit/*.json
-          if-no-files-found: error
-
       - name: Check legacy runtime contract
         run: node scripts/test-legacy-runtime-contract.mjs
 
