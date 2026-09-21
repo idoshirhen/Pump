@@ -80,6 +80,12 @@ async function search(label) {
     .slice(0, 5);
 }
 
+function compactCandidate(best) {
+  if (!best) return 'NO MATCH';
+  const row = best.row;
+  return `${row.shmmitzrach} [code=${row.Code}; kcal=${row.food_energy}; P=${row.protein}; C=${row.carbohydrates}; F=${row.total_fat}]`;
+}
+
 const source = await readFile('scripts/pump-catalog-helpers.js', 'utf8');
 const labels = [...source.matchAll(/pumpIngredient\('([^']+)'/g)].map((match) => match[1]);
 const summary = summarizeLegacyFoodLabels(labels);
@@ -96,7 +102,7 @@ for (const [index, label] of readyLabels.entries()) {
     bestScore: best?.score ?? 0,
     candidates,
   });
-  console.log(`[${index + 1}/${readyLabels.length}] ${label} -> ${best?.row?.shmmitzrach ?? 'NO MATCH'} (${best?.score ?? 0})`);
+  console.log(`[${index + 1}/${readyLabels.length}] ${label} -> ${compactCandidate(best)} (${best?.score ?? 0})`);
 }
 
 const exact = matches.filter((item) => item.status === 'exact');
