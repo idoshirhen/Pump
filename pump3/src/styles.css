@@ -39,6 +39,8 @@ p { color: var(--muted); line-height: 1.45; }
 .section-card { padding: 19px; margin-top: 12px; }
 .action-card { display: flex; align-items: center; justify-content: space-between; transition: transform .15s ease, border-color .15s ease; }
 .action-card:active { transform: scale(.99); }
+.card-button { width: 100%; color: inherit; text-align: start; appearance: none; }
+.card-button h2, .card-button p { text-align: start; }
 .arrow { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color: #111; background: var(--orange); font-size: 21px; font-weight: 900; }
 .section-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .text-button { border: 0; color: var(--orange); background: transparent; font-weight: 700; }
