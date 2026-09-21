@@ -22,6 +22,9 @@ jobs:
       - name: Build PUMP 3 frontend
         run: npm --prefix pump3 run build
 
+      - name: Enforce section 5 frontend architecture contract
+        run: node pump3/tests/section5-frontend-contract.test.mjs
+
       - name: Check helper personalization matrix
         run: node scripts/test-personalization-helpers.mjs
 
