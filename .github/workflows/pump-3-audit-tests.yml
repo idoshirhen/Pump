@@ -22,6 +22,9 @@ jobs:
       - name: Check PUMP 3 personalization engine
         run: node pump3/tests/personalization-engine.test.mjs
 
+      - name: Enforce section 3 completion contract
+        run: node pump3/tests/section3-completion.test.mjs
+
       - name: Audit exercise media coverage
         run: node scripts/audit-exercise-media.mjs
 
