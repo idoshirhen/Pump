@@ -1,0 +1,43 @@
+name: PUMP 3 Logic on PUMP 2 UI
+
+on:
+  push:
+    branches: [pump3-logic-on-v2-ui]
+  pull_request:
+    branches: [main]
+
+jobs:
+  logic-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Freeze PUMP 2 visual baseline
+        run: |
+          git diff --exit-code 23c255a36b420372af854e3b6146439db04f7f33 -- \
+            index.html \
+            assets/index-BKtf4AlF.css \
+            assets/pump-phase-one.css \
+            assets/pump-personalization-v21.css \
+            pump\ logo.png \
+            pump-logo-black.png \
+            pump-logo-favicon.png \
+            pump-logo-heart-dumbbell.png
+
+      - name: Syntax check logic overlays
+        run: node --check assets/pump-nutrition-accuracy-v1.js
+
+      - name: Verify PUMP 3 source-backed nutrition rows
+        run: node scripts/test-pump3-logic-on-v2-ui.mjs
+
+      - name: Install browser-flow test dependency
+        run: npm install --prefix /tmp/pump-personalization-test-deps jsdom@24 --no-audit --no-fund
+
+      - name: Re-run existing PUMP 2 onboarding and personalization flow
+        run: node scripts/test-personalization.mjs
