@@ -1,53 +1,64 @@
-/* PUMP nutrition accuracy layer v2
-   Single-source meal math for the rendered PUMP menu.
-   Conventions:
-   - weights shown for rice/pasta/potato/legumes/meat/fish are ready-to-eat/cooked unless named otherwise
-   - plain "טחינה" means prepared tahini sauce; raw paste must say "טחינה גולמית"
-   - plain "חומוס" means prepared hummus spread; cooked chickpeas must say "חומוס מבושל" / "גרגירי חומוס"
-   - displayed calories/protein are always recalculated from the quantities actually shown
-   - protein/energy boosters are merged into the meal quantities instead of shown as separate instructions
+/* PUMP nutrition accuracy layer v3
+   PUMP 2 UI, PUMP 3 nutrition truth layer.
+   Visual DOM structure is intentionally untouched.
+   Source-backed rows below are the reviewed PUMP 3 Ministry of Health / USDA values.
 */
 (() => {
   'use strict';
 
   const mealNutrition = new Map();
 
+  // kcal + protein per gram. Reviewed PUMP 3 canonical values are first so
+  // they win before any legacy fallback row. Rows marked legacy-fallback are
+  // retained only for catalogue items that are not yet represented canonically.
   const PER_GRAM = [
+    // PUMP 3 canonical: Israel Ministry of Health
+    [/שמן זית|שמן שומשום/i, 8.84, 0],
+    [/חמאת בוטנים/i, 5.88, 0.251],
+    [/סלמון(?: אפוי)?/i, 1.64, 0.265],
+    [/טונה.*מים/i, 0.86, 0.194],
+    [/קוטג.*5/i, 0.95, 0.11],
+    [/גבינה לבנה.*5|גבינה 5/i, 0.98, 0.09],
+    [/גבינה צהובה.*9/i, 1.96, 0.276],
+    [/גבינה בולגרית.*5/i, 1.17, 0.13],
+    [/גבינה מלוחה.*5/i, 1.25, 0.173],
+    [/שיבולת שועל/i, 3.79, 0.131],
+    [/קינואה.*מבושל/i, 1.40, 0.054],
+    [/בורגול.*מבושל/i, 0.83, 0.031],
+    [/רוטב עגבניות/i, 0.48, 0.015],
+    [/קוסקוס.*מבושל/i, 1.75, 0.059],
+
+    // PUMP 3 canonical: USDA FoodData Central pinned SR Legacy records
+    [/חזה עוף|עוף מבושל|עוף מתובל/i, 1.65, 0.3102],
+    [/טופו/i, 1.44, 0.173],
+    [/אורז.*מבושל|אורז מוכן/i, 1.30, 0.0269],
+    [/תפוחי? אדמה.*אפוי|תפוחי? אדמה/i, 0.93, 0.025],
+    [/בטטה/i, 0.90, 0.0201],
+
+    // Explicit prepared/raw distinction retained from the legacy catalogue.
     [/טחינה גולמית/i, 5.95, 0.17],
     [/טחינה/i, 2.40, 0.08],
-    [/שמן זית|שמן שומשום/i, 8.84, 0],
-    [/חמאת בוטנים/i, 5.88, 0.25],
+
+    // Legacy fallbacks. These are deliberately after reviewed PUMP 3 rows.
     [/אגוז/i, 6.20, 0.15],
     [/שקדים/i, 5.79, 0.21],
-    [/חזה עוף|עוף מבושל|עוף מתובל/i, 1.65, 0.31],
     [/פרגי/i, 2.09, 0.26],
     [/קציצות הודו/i, 1.90, 0.24],
     [/הודו/i, 1.70, 0.29],
     [/קציצות בקר|קציצת בקר/i, 2.15, 0.24],
     [/בקר טחון|בקר רזה|בקר/i, 2.10, 0.26],
-    [/סלמון/i, 2.08, 0.20],
     [/דג לבן/i, 1.28, 0.26],
     [/דג בתנור/i, 1.45, 0.25],
-    [/טונה.*מים/i, 1.16, 0.26],
     [/טונה/i, 1.30, 0.26],
-    [/טופו/i, 1.44, 0.17],
     [/תחליף עוף.*סויה/i, 1.65, 0.18],
     [/אדממה/i, 1.21, 0.12],
-    [/קוטג.*5/i, 1.03, 0.11],
-    [/גבינה לבנה.*5|גבינה 5/i, 1.05, 0.11],
-    [/גבינה צהובה.*9/i, 2.60, 0.30],
-    [/גבינה בולגרית.*5|גבינה מלוחה.*5/i, 1.55, 0.14],
     [/יוגורט עשיר בחלבון|יוגורט PRO|סקיר/i, 0.70, 0.10],
     [/יוגורט טבעי/i, 0.62, 0.035],
     [/יוגורט סויה/i, 0.65, 0.04],
     [/משקה סויה/i, 0.43, 0.033],
-    [/אורז.*מבושל|אורז מוכן/i, 1.30, 0.027],
     [/פתיתים.*מבושל/i, 1.55, 0.052],
     [/פסטת עדשים.*מבושל/i, 1.45, 0.09],
     [/פסטה.*מבושל/i, 1.57, 0.058],
-    [/קוסקוס.*מבושל/i, 1.12, 0.038],
-    [/בורגול.*מבושל/i, 0.83, 0.031],
-    [/קינואה.*מבושל/i, 1.20, 0.044],
     [/מג.?דרה.*מבושל/i, 1.35, 0.055],
     [/עדשים.*מבושל/i, 1.16, 0.09],
     [/חומוס מבושל|גרגירי חומוס/i, 1.64, 0.089],
@@ -58,16 +69,15 @@
     [/קציצות עדשים/i, 1.65, 0.085],
     [/פלאפל אפוי/i, 2.30, 0.11],
     [/תירס/i, 0.96, 0.034],
-    [/תפוחי? אדמה.*אפוי|תפוחי? אדמה/i, 0.93, 0.025],
-    [/בטטה/i, 0.90, 0.02],
-    [/שיבולת שועל/i, 3.79, 0.13],
     [/מוזלי/i, 3.70, 0.10],
-    [/רוטב שקשוקה|רוטב עגבניות/i, 0.45, 0.015],
+    [/רוטב שקשוקה/i, 0.45, 0.015],
     [/שמרי בירה/i, 3.25, 0.45],
     [/זיתים/i, 1.45, 0.01],
     [/ענבים/i, 0.69, 0.007],
   ];
 
+  // Units remain catalogue-specific because a unit is not a fixed 100 g source row.
+  // These are only used when the legacy card itself is expressed in units/slices.
   const PER_UNIT = [
     [/^ביצים?$|ביצה קשה|ביצים קשות/i, 72, 6.3],
     [/לחם מלא/i, 78, 3.6],
@@ -89,7 +99,11 @@
   function vegNutrition(name, amount, unit) {
     if (/לימון|קינמון|זעתר|קורט/i.test(name)) return { calories: 2, protein: 0, known: true };
     if (/קערה/i.test(unit)) return { calories: 35 * amount, protein: 1.5 * amount, known: true };
-    if (/גרם/i.test(unit)) return { calories: 0.25 * amount, protein: 0.012 * amount, known: true };
+    if (/גרם/i.test(unit)) {
+      // PUMP 3 canonical Israeli chopped salad, no added oil: 17 kcal / 0.8 g protein per 100 g.
+      if (/סלט|ירקות|עגבני|מלפפון/i.test(name)) return { calories: 0.17 * amount, protein: 0.008 * amount, known: true };
+      return { calories: 0.25 * amount, protein: 0.012 * amount, known: true };
+    }
     return { calories: 25 * amount, protein: 1 * amount, known: true };
   }
 
@@ -274,6 +288,12 @@
     } catch (_) {}
     return nativeFetch(input, init);
   };
+
+  // Logic inspection hook only. It does not create/modify any UI.
+  window.PUMP3NutritionLogic = Object.freeze({
+    version: '3.0-on-v2-ui',
+    nutritionFor: (name, amount, unit) => nutritionFor(name, amount, unit),
+  });
 
   const observer = new MutationObserver(() => requestAnimationFrame(scan));
   const start = () => {
