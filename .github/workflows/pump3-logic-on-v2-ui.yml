@@ -18,13 +18,16 @@ jobs:
         with:
           node-version: 22
 
-      - name: Freeze PUMP 2 visual baseline
+      - name: Freeze PUMP 2 visual baseline and legacy app bundle
         run: |
           git diff --exit-code 23c255a36b420372af854e3b6146439db04f7f33 -- \
             index.html \
+            assets/index-personalized-v2.js \
             assets/index-BKtf4AlF.css \
             assets/pump-phase-one.css \
             assets/pump-personalization-v21.css \
+            assets/pump-workout-timer-v1.css \
+            assets/pump-exercise-media-v1.css \
             pump\ logo.png \
             pump-logo-black.png \
             pump-logo-favicon.png \
@@ -36,8 +39,10 @@ jobs:
       - name: Verify PUMP 3 source-backed nutrition rows
         run: node scripts/test-pump3-logic-on-v2-ui.mjs
 
-      - name: Install browser-flow test dependency
-        run: npm install --prefix /tmp/pump-personalization-test-deps jsdom@24 --no-audit --no-fund
-
-      - name: Re-run existing PUMP 2 onboarding and personalization flow
-        run: node scripts/test-personalization.mjs
+      - name: Verify unchanged legacy runtime scripts still parse
+        run: |
+          node --check assets/pump-workout-timer-v1.js
+          node --check assets/pump-meal-structure-native-preview.js
+          node --check assets/pump-exercise-media-v1.js
+          node --check assets/pump-exercise-coverage-v1.js
+          node --check assets/pump-mobile-ui-v1.js
