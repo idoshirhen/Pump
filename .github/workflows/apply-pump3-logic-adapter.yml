@@ -1,0 +1,42 @@
+name: Apply PUMP 3 Logic Adapter
+
+on:
+  push:
+    branches: [pump3-logic-on-v2-ui]
+    paths:
+      - assets/pump3-core-logic-v1.js
+      - assets/pump-nutrition-accuracy-v1.js
+      - scripts/apply-pump3-logic-adapter.mjs
+      - index.html
+      - .github/workflows/apply-pump3-logic-adapter.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pump3-logic-on-v2-ui
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply logic adapter only
+        run: node scripts/apply-pump3-logic-adapter.mjs
+
+      - name: Commit patched bundle when needed
+        run: |
+          if git diff --quiet -- assets/index-personalized-v2.js; then
+            echo "Bundle already uses PUMP 3 logic adapter"
+            exit 0
+          fi
+          git config user.name "PUMP Logic Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assets/index-personalized-v2.js
+          git commit -m "logic: route frozen PUMP 2 UI through PUMP 3 engines"
+          git push origin HEAD:pump3-logic-on-v2-ui
