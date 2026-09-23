@@ -49,6 +49,12 @@ const { window } = dom;
 const pageErrors = [];
 window.addEventListener('error', (event) => pageErrors.push(event.error || event.message));
 window.Headers = Headers;
+// jsdom intentionally does not implement scrolling; the app only needs these
+// calls as UI side effects, so no-op them for logic-flow testing.
+window.scrollTo = () => {};
+window.document.documentElement.scrollTo = () => {};
+window.document.body.scrollTo = () => {};
+window.HTMLElement.prototype.scrollIntoView = () => {};
 window.fetch = async (input, init = {}) => {
   const url = new URL(String(input));
   const method = String(init.method || 'GET').toUpperCase();
