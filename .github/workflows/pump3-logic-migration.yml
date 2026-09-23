@@ -1,0 +1,40 @@
+name: PUMP 3 Logic Migration
+
+on:
+  push:
+    branches: [pump3-logic-migration]
+  pull_request:
+    branches: [main]
+
+jobs:
+  logic-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Syntax-check logic bridge
+        run: |
+          node --check assets/pump-fetch-base-v1.js
+          node --check assets/pump3-logic-bridge-v1.js
+
+      - name: Enforce legacy visual freeze and PUMP 3 engine smoke test
+        run: node scripts/test-pump3-logic-migration.mjs
+
+      - name: Check canonical nutrition engine
+        run: |
+          node --check pump3/src/nutrition/engine/nutrition-engine.js
+          node --check pump3/src/nutrition/engine/meal-targeting.js
+          node --check pump3/src/nutrition/engine/day-planner.js
+
+      - name: Check personalization and training engines
+        run: |
+          node --check pump3/src/personalization/engine.js
+          node --check pump3/src/personalization/profile.js
+          node --check pump3/src/personalization/targets.js
+          node --check pump3/src/training/engine/workout-engine.js
