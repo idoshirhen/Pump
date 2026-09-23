@@ -18,26 +18,20 @@ jobs:
         with:
           node-version: 22
 
-      - name: Freeze PUMP 2 visual baseline and legacy app bundle
-        run: |
-          git diff --exit-code 23c255a36b420372af854e3b6146439db04f7f33 -- \
-            index.html \
-            assets/index-personalized-v2.js \
-            assets/index-BKtf4AlF.css \
-            assets/pump-phase-one.css \
-            assets/pump-personalization-v21.css \
-            assets/pump-workout-timer-v1.css \
-            assets/pump-exercise-media-v1.css \
-            pump\ logo.png \
-            pump-logo-black.png \
-            pump-logo-favicon.png \
-            pump-logo-heart-dumbbell.png
+      - name: Prove PUMP 2 visual surface is frozen
+        run: node scripts/test-pump3-visual-freeze.mjs
 
-      - name: Syntax check logic overlays
-        run: node --check assets/pump-nutrition-accuracy-v1.js
+      - name: Syntax check PUMP 3 logic adapters
+        run: |
+          node --check assets/pump-nutrition-accuracy-v1.js
+          node --check assets/pump3-core-logic-v1.js
+          node --check scripts/apply-pump3-logic-adapter.mjs
 
       - name: Verify PUMP 3 source-backed nutrition rows
         run: node scripts/test-pump3-logic-on-v2-ui.mjs
+
+      - name: Verify PUMP 3 target and training rules
+        run: node scripts/test-pump3-core-logic.mjs
 
       - name: Verify unchanged legacy runtime scripts still parse
         run: |
